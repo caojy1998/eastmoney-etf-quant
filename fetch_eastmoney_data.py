@@ -50,10 +50,10 @@ def fetch_kline_eastmoney(secid: str, beg: str = "20200601", end: str = "2050010
         "Connection": "close",
     }
     last_err = None
-    for attempt in range(3):
+    for attempt in range(2):
         try:
             req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            with urllib.request.urlopen(req, timeout=5) as resp:
                 raw = json.loads(resp.read().decode("utf-8"))
             klines = raw.get("data", {}).get("klines", [])
             if not klines:
@@ -79,7 +79,7 @@ def fetch_kline_eastmoney(secid: str, beg: str = "20200601", end: str = "2050010
             return df.sort_values("date").reset_index(drop=True)
         except Exception as e:
             last_err = e
-            time.sleep(0.8 * (attempt + 1))
+            time.sleep(0.3)
     raise last_err
 
 
@@ -119,12 +119,42 @@ def fetch_kline_gtimg_fallback(symbol: str, fqt_mode: str = "qfq") -> pd.DataFra
     return df
 
 
-def fetch_etf_history(code: str, info: dict) -> pd.DataFrame:
+def fetch_realtime_quotes_map() -> dict[str, dict]:
+    """从实时行情流获取全部核心 ETF 的盘中最新价与当日高低开数据，确保盘中(如14:45)运行时100%包含当日最新K线"""
+    syms = ",".join(info["symbol"] for info in ETF_UNIVERSE.values())
+    url = f"https://qt.gtimg.cn/q={syms}"
+    quotes = {}
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Connection": "close"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            text = resp.read().decode("gbk", errors="ignore")
+        for line in text.strip().split(";"):
+            parts = line.split("~")
+            if len(parts) > 35 and parts[2] and parts[3]:
+                code = parts[2].strip()
+                ts_str = parts[30].strip()
+                if len(ts_str) >= 8 and float(parts[3]) > 0:
+                    dt_val = pd.to_datetime(ts_str[:8], format="%Y%m%d")
+                    quotes[code] = {
+                        "date": dt_val,
+                        "raw_close": float(parts[3]),
+                        "prev_raw_close": float(parts[4]) if parts[4] else float(parts[3]),
+                        "raw_open": float(parts[5]) if parts[5] and float(parts[5]) > 0 else float(parts[3]),
+                        "raw_high": float(parts[33]) if parts[33] and float(parts[33]) > 0 else float(parts[3]),
+                        "raw_low": float(parts[34]) if parts[34] and float(parts[34]) > 0 else float(parts[3]),
+                        "volume": float(parts[36]) if parts[36] else 0.0,
+                    }
+    except Exception:
+        pass
+    return quotes
+
+
+def fetch_etf_history(code: str, info: dict, rt_quote: dict | None = None) -> pd.DataFrame:
     secid = info["secid"]
     symbol = info["symbol"]
     try:
         df_adj = fetch_kline_eastmoney(secid, beg="20200601", fqt=1)
-        time.sleep(0.3)
+        time.sleep(0.2)
         df_raw = fetch_kline_eastmoney(secid, beg="20200601", fqt=0)
     except Exception as e:
         print(f"   [提示] 东财直连限流 ({e})，自动启用备用高速接口拉取 [{code}]...")
@@ -146,6 +176,39 @@ def fetch_etf_history(code: str, info: dict) -> pd.DataFrame:
     df["raw_close"] = df["raw_close"].fillna(df["close"])
     df["raw_high"] = df["raw_high"].fillna(df["high"])
     df["raw_low"] = df["raw_low"].fillna(df["low"])
+
+    # 若盘中运行且备用接口尚未归档当日K线，自动将实时行情流中的当日K线合并进去；若已有当日K线则刷新为最新秒级现价
+    if rt_quote and rt_quote["date"] > df["date"].max():
+        last_row = df.iloc[-1]
+        prev_raw = rt_quote["prev_raw_close"] if rt_quote["prev_raw_close"] > 0 else float(last_row["raw_close"])
+        adj_factor = float(last_row["close"]) / prev_raw if prev_raw > 0 else 1.0
+        new_close = round(rt_quote["raw_close"] * adj_factor, 4)
+        new_open = round(rt_quote["raw_open"] * adj_factor, 4)
+        new_high = round(rt_quote["raw_high"] * adj_factor, 4)
+        new_low = round(rt_quote["raw_low"] * adj_factor, 4)
+        pct_chg = (rt_quote["raw_close"] / prev_raw - 1.0) * 100.0 if prev_raw > 0 else 0.0
+        amp = (rt_quote["raw_high"] - rt_quote["raw_low"]) / prev_raw * 100.0 if prev_raw > 0 else 0.0
+        new_row = {
+            "date": rt_quote["date"],
+            "open": new_open,
+            "close": new_close,
+            "high": new_high,
+            "low": new_low,
+            "volume": rt_quote["volume"],
+            "pct_chg": round(pct_chg, 2),
+            "amplitude": round(amp, 2),
+            "raw_open": rt_quote["raw_open"],
+            "raw_close": rt_quote["raw_close"],
+            "raw_high": rt_quote["raw_high"],
+            "raw_low": rt_quote["raw_low"],
+        }
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    elif rt_quote and rt_quote["date"] == df["date"].max() and len(df) >= 2:
+        idx_last = df.index[-1]
+        df.loc[idx_last, "raw_close"] = rt_quote["raw_close"]
+        df.loc[idx_last, "raw_high"] = max(float(df.loc[idx_last, "raw_high"]), rt_quote["raw_high"])
+        df.loc[idx_last, "raw_low"] = min(float(df.loc[idx_last, "raw_low"]), rt_quote["raw_low"])
+
     return df
 
 
@@ -155,6 +218,7 @@ def download_all(force_refresh: bool = True):
     print("正在从东方财富 (EastMoney) 同步最新场内 ETF 历史与实盘行情...")
     print("==========================================================")
 
+    rt_quotes = fetch_realtime_quotes_map()
     for code, info in ETF_UNIVERSE.items():
         name = info["name"]
         out_path = DATA_DIR / f"{code}.csv"
@@ -170,7 +234,7 @@ def download_all(force_refresh: bool = True):
 
         print(f"-> 正在拉取 [{code} {name}] 最新前复权与实盘价格序列...")
         try:
-            df = fetch_etf_history(code, info)
+            df = fetch_etf_history(code, info, rt_quote=rt_quotes.get(code))
             df.to_csv(out_path, index=False, encoding="utf-8-sig")
             print(
                 f"   [成功] 共 {len(df)} 个交易日 ({df['date'].min().strftime('%Y-%m-%d')} ~ {df['date'].max().strftime('%Y-%m-%d')}), "
