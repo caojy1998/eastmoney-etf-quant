@@ -191,35 +191,69 @@ def generate_live_signals(total_capital: float = 50000.0) -> dict:
             "status_note": grid_note,
         })
 
-    def build_order_sheet(weights_map: dict, capital: float, reserve_ratio: float = 0.10) -> list[dict]:
-        """按 (1 - reserve_ratio) 分配实盘建仓资金，确保永远留出约 10% 现金作为网格低吸备用金，绝不超支"""
-        investable_cap = capital * (1.0 - reserve_ratio)
+    def build_order_sheet(weights_map: dict, capital: float, min_reserve_ratio: float = 0.06) -> list[dict]:
+        """
+        智能整手分配算法（消除双重扣减备用金损耗）：
+        1. 先按 100% 理论目标金额 (capital * w) 计算各 ETF 的 100 股整手数：
+           由于 511260(十年国债ETF) 1手约 1.36 万元，其向下取整留出的零头天然可充当网格备用金，
+           无需再对红利低波(512890)、德国ETF(513030)等小面值核心仓位额外打 9 折。
+        2. 若因 511260 向上取整导致总持仓超过 (1 - min_reserve_ratio) 上限，
+           优先将向上取整的 511260 退回 1 手（向下取整），若仍超限再按比例微调小面值品种，确保永不超支。
+        """
+        max_investable = capital * (1.0 - min_reserve_ratio)
         orders = []
         for c, w in sorted(weights_map.items(), key=lambda x: x[1], reverse=True):
             if w <= 0.005:
                 continue
             raw_px = float(raw_close_df.loc[latest_dt, c])
-            target_amt = investable_cap * w
+            target_amt = capital * w
             lot_cost = raw_px * 100.0
             lots = int(round(target_amt / lot_cost))
-            if lots == 0 and (capital * w) >= lot_cost * 0.55:
+            if lots == 0 and target_amt >= lot_cost * 0.55:
                 lots = 1
-            actual_shares = lots * 100
-            actual_amt = round(actual_shares * raw_px, 2)
             orders.append({
                 "code": c,
                 "name": ETF_UNIVERSE[c]["name"],
                 "latest_price": round(raw_px, 3),
                 "target_weight_pct": round(w * 100, 1),
-                "target_amt": round(capital * w, 0),
-                "suggest_shares": actual_shares,
+                "target_amt": round(target_amt, 0),
+                "suggest_shares": lots * 100,
                 "suggest_lots": lots,
-                "actual_amt": actual_amt,
+                "actual_amt": round(lots * 100 * raw_px, 2),
+                "lot_cost": lot_cost,
                 "note": ETF_UNIVERSE[c]["desc"],
             })
+
+        total_spend = sum(item["actual_amt"] for item in orders)
+        # 若总花费超出上限，且 511260 向上取整（或 511260 单品种已超上限），则将 511260 减 1 手以释放现金备用金
+        if total_spend > max_investable:
+            for item in orders:
+                if item["code"] == "511260" and item["suggest_lots"] >= 1 and (
+                    item["actual_amt"] > item["target_amt"] or item["actual_amt"] > max_investable
+                ):
+                    item["suggest_lots"] -= 1
+                    item["suggest_shares"] = item["suggest_lots"] * 100
+                    item["actual_amt"] = round(item["suggest_shares"] * item["latest_price"], 2)
+                    break
+
+        # 若仍超出上限（例如纯策略二无国债时），按比例缩减高仓位小面值品种直到满足最低备用金要求
+        total_spend = sum(item["actual_amt"] for item in orders)
+        while total_spend > max_investable:
+            candidates = [x for x in orders if x["code"] != "511260" and x["suggest_lots"] >= 1]
+            if not candidates:
+                break
+            # 选择当前实际金额超出目标金额最多（或持仓最大）的小面值品种减 1 手
+            target_item = max(candidates, key=lambda x: (x["actual_amt"] - x["target_amt"] * (1.0 - min_reserve_ratio), x["actual_amt"]))
+            target_item["suggest_lots"] -= 1
+            target_item["suggest_shares"] = target_item["suggest_lots"] * 100
+            target_item["actual_amt"] = round(target_item["suggest_shares"] * target_item["latest_price"], 2)
+            total_spend = sum(item["actual_amt"] for item in orders)
+
+        for item in orders:
+            item.pop("lot_cost", None)
         return orders
 
-    combo_orders = build_order_sheet(weights_combo, total_capital, reserve_ratio=0.10)
+    combo_orders = build_order_sheet(weights_combo, total_capital, min_reserve_ratio=0.06)
 
     all_codes = ["511260", "513030", "512890", "511380", "518880", "510500"]
     target_map = {item["code"]: item["suggest_shares"] for item in combo_orders}
@@ -267,9 +301,34 @@ def generate_live_signals(total_capital: float = 50000.0) -> dict:
             })
 
     order_priority = {"🔴 第一步：卖出减仓": 0, "🟢 第二步：买入加仓": 1, "⚪ 微调免操作(防手续费磨损)": 2, "⚪ 保持不动": 3}
+
+    # 防呆校验：若因某只ETF“微调免卖出”而另一只ETF“买入加仓”导致调仓后总市值超出 (1 - 0.06) 上限，
+    # 自动恢复被免除的卖出项，确保用户永远有充足现金执行买入
+    max_post_spend = total_capital * (1.0 - 0.06)
+    post_used_cash = round(
+        sum(post_rebalance_positions[c] * float(raw_close_df.loc[latest_dt, c]) for c in all_codes), 1
+    )
+    if post_used_cash > max_post_spend:
+        for step in action_steps:
+            c = step["code"]
+            if step["action"] == "⚪ 微调免操作(防手续费磨损)" and step["theoretical_target_shares"] < step["current_shares"]:
+                diff_sh_restore = step["theoretical_target_shares"] - step["current_shares"]
+                raw_px = float(raw_close_df.loc[latest_dt, c])
+                step["action"] = "🔴 第一步：卖出减仓"
+                step["target_shares"] = step["theoretical_target_shares"]
+                step["trade_shares"] = abs(diff_sh_restore)
+                step["trade_lots"] = abs(diff_sh_restore) // 100
+                step["est_cash_flow"] = round(abs(diff_sh_restore) * raw_px, 1)
+                post_rebalance_positions[c] = int(step["theoretical_target_shares"])
+                post_used_cash = round(
+                    sum(post_rebalance_positions[k] * float(raw_close_df.loc[latest_dt, k]) for k in all_codes), 1
+                )
+                if post_used_cash <= max_post_spend:
+                    break
+
     action_steps.sort(key=lambda x: (order_priority.get(x["action"], 9), -x["est_cash_flow"]))
 
-    used_combo_cash = round(sum(item["actual_amt"] for item in combo_orders), 1)
+    used_combo_cash = post_used_cash
     reserve_cash = round(total_capital - used_combo_cash, 1)
 
     result = {
@@ -291,12 +350,13 @@ def generate_live_signals(total_capital: float = 50000.0) -> dict:
     with open(OUTPUT_DIR / "live_signal_eastmoney.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
+    util_pct = used_combo_cash / total_capital * 100.0 if total_capital > 0 else 0.0
     print("==========================================================================")
-    print(f"📌 东方财富 50,000 元实盘调仓指令单 (基准行情日: {result['as_of_date']} | 海外核心: 513030 德国ETF)")
+    print(f"📌 东方财富 {total_capital:,.0f} 元实盘调仓指令单 (基准行情日: {result['as_of_date']} | 海外核心: 513030 德国ETF)")
     print("==========================================================================")
-    print("\n【方案 C（推荐二合一）：50%全天候网格 + 50%动量轮动 5万元一键下单表】")
+    print(f"\n【方案 C（推荐二合一）：50%全天候网格 + 50%动量轮动 {total_capital/10000:.1f}万元一键下单表】")
     print(pd.DataFrame(result["combo_orders"])[["code", "name", "latest_price", "target_weight_pct", "suggest_shares", "actual_amt"]].to_string(index=False))
-    print(f"   -> 证券持仓合计: ¥{used_combo_cash:,.1f} 元 | 预留网格低吸/逆回购备用金: ¥{reserve_cash:,.1f} 元")
+    print(f"   -> 证券持仓合计: ¥{used_combo_cash:,.1f} 元 (资金利用率 {util_pct:.1f}%) | 预留网格低吸/逆回购备用金: ¥{reserve_cash:,.1f} 元")
 
     print("\n【东方财富 APP「网格交易条件单」推荐填入参数】")
     print(pd.DataFrame(result["strategy1_grid_params"]).to_string(index=False))

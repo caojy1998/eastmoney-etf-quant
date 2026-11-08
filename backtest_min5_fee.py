@@ -24,7 +24,15 @@ def calc_order_fee(trade_amt: float, min_fee: float = 5.0, rate: float = 0.00015
     return max(min_fee, trade_amt * rate) + trade_amt * SLIPPAGE_RATE
 
 
-def sim_combo(close_df, high_df, low_df, min_fee: float = 5.0, rate: float = 0.00015, mode: str = "naive"):
+def sim_combo(
+    close_df,
+    high_df,
+    low_df,
+    min_fee: float = 5.0,
+    rate: float = 0.00015,
+    mode: str = "naive",
+    initial_capital: float = INITIAL_CAPITAL,
+):
     ret_df = close_df.pct_change().fillna(0.0)
     vol20_df = ret_df.rolling(20, min_periods=10).std() * np.sqrt(250)
     ma60_df = close_df.rolling(60, min_periods=20).mean()
@@ -35,7 +43,7 @@ def sim_combo(close_df, high_df, low_df, min_fee: float = 5.0, rate: float = 0.0
 
     dates = close_df.index
     start_idx = dates.searchsorted(pd.to_datetime("2021-01-04"))
-    nav = INITIAL_CAPITAL
+    nav = initial_capital
     nav_series = {}
     all_codes = ["511260", "511380", "512890", "518880", "513030", "510500"]
     cur_w = {c: 0.0 for c in all_codes}
@@ -78,7 +86,7 @@ def sim_combo(close_df, high_df, low_df, min_fee: float = 5.0, rate: float = 0.0
                             grid_net_gain_sum += net_gain
                 elif mode == "optimized_min5":
                     # 针对“不免5”专门优化的【波段大网格】：单格金额随本金等比放大(5万->2800元, 6万->3360元)，但5元最低佣金不变！
-                    scale = INITIAL_CAPITAL / 50000.0
+                    scale = initial_capital / 50000.0
                     if alloc_amt >= 8000.0 * scale:
                         grid_order_amt = 2800.0 * scale
                         step = max(0.022, float(atr20_pct.loc[dt, gc]) * 1.45)
@@ -145,7 +153,7 @@ def sim_combo(close_df, high_df, low_df, min_fee: float = 5.0, rate: float = 0.0
 
         if need_eval:
             tgt_w = {c: 0.5 * w_s1[c] + 0.5 * w_s2[c] for c in all_codes}
-            scale = INITIAL_CAPITAL / 50000.0
+            scale = initial_capital / 50000.0
             min_trade_thresh = 300.0 * scale if mode == "naive" else 1800.0 * scale
             new_w = dict(cur_w)
             step_fee = 0.0
@@ -179,7 +187,7 @@ def main():
         ("情况2：万1.5+不免5(最低5元) —— 关闭小网格，只跑周五低频调仓(含防微调锁)", 5.0, 0.00015, "no_grid"),
         ("情况3：万1.5+不免5(最低5元) —— 开启【不免5专用大步长网格 2.2%+2800元/格】+防微调锁", 5.0, 0.00015, "optimized_min5"),
     ]:
-        ser, fees, r_cnt, g_cnt, g_net = sim_combo(close_df, high_df, low_df, mf, rt, md)
+        ser, fees, r_cnt, g_cnt, g_net = sim_combo(close_df, high_df, low_df, mf, rt, md, initial_capital=50000.0)
         m = calc_performance_metrics(ser, label)
         print(f"=== {label} ===")
         print(
@@ -192,10 +200,8 @@ def main():
     print("==========================================================================")
     print("💰 不同初始本金在【万1.5 + 不免5(最低5元)】下的收益率与佣金摊薄对比")
     print("==========================================================================")
-    global INITIAL_CAPITAL
     for cap in [50000.0, 60000.0, 80000.0, 100000.0]:
-        INITIAL_CAPITAL = cap
-        ser, fees, r_cnt, g_cnt, g_net = sim_combo(close_df, high_df, low_df, 5.0, 0.00015, "optimized_min5")
+        ser, fees, r_cnt, g_cnt, g_net = sim_combo(close_df, high_df, low_df, 5.0, 0.00015, "optimized_min5", initial_capital=cap)
         m = calc_performance_metrics(ser, f"{int(cap//10000)}万元本金")
         fee_drag = fees / cap * 100.0
         print(

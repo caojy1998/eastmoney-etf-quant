@@ -27,7 +27,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>🚀 东方财富 5万元本金 场内ETF量化回测与实盘信号终端</h1>
+  <h1>🚀 东方财富 5.0万元本金 场内ETF量化回测与实盘信号终端</h1>
   <div class="subtitle">最新行情基准日：2026-11-06 ｜ 免可转债10万权限门槛 ｜ 0印花税 ｜ 含东方财富APP「网格条件单」参数</div>
 
   <div class="grid-cards">
@@ -153,7 +153,7 @@
   </div>
 
   <div class="section">
-    <h2>📌 二、今日东方财富 50,000 元实盘一键下单清单（已按 1手=100股 取整）</h2>
+    <h2>📌 二、今日东方财富 {live_data['total_capital']:,.0f} 元实盘一键下单清单（已按 1手=100股 智能取整，资金利用率 {live_data['used_combo_cash']/live_data['total_capital']*100:.1f}%）</h2>
     <p style="color:#94a3b8;font-size:13px;">你可以根据自己的风险偏好，从下方【策略一（极低回撤固收+）】或【二合一推荐组合】中任选其一在东方财富APP下单：</p>
     <h3 style="color:#34d399;font-size:16px;">选项 1：如果你追求极度稳健（最大回撤 ~2.1%，连续6年年年正收益）👉 按【策略一】配仓：</h3>
     <table>
@@ -163,13 +163,13 @@
       <tbody>
         <tr>
           <td><b>511260</b></td><td>十年国债ETF</td><td>136.133</td>
-          <td>77.8%</td><td style="color:#34d399;font-weight:bold;">300 股 (3手)</td>
-          <td>¥40,839.9</td><td style="text-align:left;color:#94a3b8;">长久期国债，股市大跌时的避险安全屋</td>
+          <td>77.8%</td><td style="color:#34d399;font-weight:bold;">200 股 (2手)</td>
+          <td>¥27,226.6</td><td style="text-align:left;color:#94a3b8;">长久期国债，股市大跌时的避险安全屋</td>
         </tr>
         <tr>
           <td><b>512890</b></td><td>红利低波ETF</td><td>1.237</td>
-          <td>9.0%</td><td style="color:#34d399;font-weight:bold;">3300 股 (33手)</td>
-          <td>¥4,082.1</td><td style="text-align:left;color:#94a3b8;">高股息+低波动，熊市抗跌、长期复利核心</td>
+          <td>9.0%</td><td style="color:#34d399;font-weight:bold;">3600 股 (36手)</td>
+          <td>¥4,453.2</td><td style="text-align:left;color:#94a3b8;">高股息+低波动，熊市抗跌、长期复利核心</td>
         </tr>
         <tr>
           <td><b>511380</b></td><td>可转债ETF</td><td>12.664</td>
@@ -178,13 +178,13 @@
         </tr>
         <tr>
           <td><b>513030</b></td><td>德国ETF</td><td>1.807</td>
-          <td>4.4%</td><td style="color:#34d399;font-weight:bold;">1100 股 (11手)</td>
-          <td>¥1,987.7</td><td style="text-align:left;color:#94a3b8;">T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价</td>
+          <td>4.4%</td><td style="color:#34d399;font-weight:bold;">1200 股 (12手)</td>
+          <td>¥2,168.4</td><td style="text-align:left;color:#94a3b8;">T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价</td>
         </tr>
         <tr>
           <td><b>518880</b></td><td>黄金ETF</td><td>8.253</td>
-          <td>2.6%</td><td style="color:#34d399;font-weight:bold;">100 股 (1手)</td>
-          <td>¥825.3</td><td style="text-align:left;color:#94a3b8;">T+0抗通胀避险资产，与A股低相关</td>
+          <td>2.6%</td><td style="color:#34d399;font-weight:bold;">200 股 (2手)</td>
+          <td>¥1,650.6</td><td style="text-align:left;color:#94a3b8;">T+0抗通胀避险资产，与A股低相关</td>
         </tr>
       </tbody>
     </table>
@@ -197,6 +197,13 @@
       <tbody>
         <tr>
           <td style="color:#34d399;font-weight:bold;">🟢 第二步：买入加仓</td>
+          <td><b>512890</b></td><td>红利低波ETF</td><td>1.237</td>
+          <td>0 股</td><td><b>11900 股</b></td>
+          <td style="color:#34d399;font-weight:bold;">11900 股 (119手)</td>
+          <td>¥14,720.3</td>
+        </tr>
+        <tr>
+          <td style="color:#34d399;font-weight:bold;">🟢 第二步：买入加仓</td>
           <td><b>511260</b></td><td>十年国债ETF</td><td>136.133</td>
           <td>0 股</td><td><b>100 股</b></td>
           <td style="color:#34d399;font-weight:bold;">100 股 (1手)</td>
@@ -204,17 +211,10 @@
         </tr>
         <tr>
           <td style="color:#34d399;font-weight:bold;">🟢 第二步：买入加仓</td>
-          <td><b>512890</b></td><td>红利低波ETF</td><td>1.237</td>
-          <td>0 股</td><td><b>10700 股</b></td>
-          <td style="color:#34d399;font-weight:bold;">10700 股 (107手)</td>
-          <td>¥13,235.9</td>
-        </tr>
-        <tr>
-          <td style="color:#34d399;font-weight:bold;">🟢 第二步：买入加仓</td>
           <td><b>513030</b></td><td>德国ETF</td><td>1.807</td>
-          <td>0 股</td><td><b>6800 股</b></td>
-          <td style="color:#34d399;font-weight:bold;">6800 股 (68手)</td>
-          <td>¥12,287.6</td>
+          <td>0 股</td><td><b>7500 股</b></td>
+          <td style="color:#34d399;font-weight:bold;">7500 股 (75手)</td>
+          <td>¥13,552.5</td>
         </tr>
         <tr>
           <td style="color:#34d399;font-weight:bold;">🟢 第二步：买入加仓</td>

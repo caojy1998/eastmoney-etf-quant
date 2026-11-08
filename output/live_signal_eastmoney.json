@@ -1,8 +1,8 @@
 {
   "as_of_date": "2026-11-06",
   "total_capital": 50000.0,
-  "used_combo_cash": 41228.5,
-  "reserve_cash": 8771.5,
+  "used_combo_cash": 43977.8,
+  "reserve_cash": 6022.2,
   "strategy1_orders": [
     {
       "code": "511260",
@@ -10,9 +10,9 @@
       "latest_price": 136.133,
       "target_weight_pct": 77.8,
       "target_amt": 38884.0,
-      "suggest_shares": 300,
-      "suggest_lots": 3,
-      "actual_amt": 40839.9,
+      "suggest_shares": 200,
+      "suggest_lots": 2,
+      "actual_amt": 27226.6,
       "note": "长久期国债，股市大跌时的避险安全屋"
     },
     {
@@ -21,9 +21,9 @@
       "latest_price": 1.237,
       "target_weight_pct": 9.0,
       "target_amt": 4482.0,
-      "suggest_shares": 3300,
-      "suggest_lots": 33,
-      "actual_amt": 4082.1,
+      "suggest_shares": 3600,
+      "suggest_lots": 36,
+      "actual_amt": 4453.2,
       "note": "高股息+低波动，熊市抗跌、长期复利核心"
     },
     {
@@ -43,9 +43,9 @@
       "latest_price": 1.807,
       "target_weight_pct": 4.4,
       "target_amt": 2210.0,
-      "suggest_shares": 1100,
-      "suggest_lots": 11,
-      "actual_amt": 1987.7,
+      "suggest_shares": 1200,
+      "suggest_lots": 12,
+      "actual_amt": 2168.4,
       "note": "T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价"
     },
     {
@@ -54,9 +54,9 @@
       "latest_price": 8.253,
       "target_weight_pct": 2.6,
       "target_amt": 1308.0,
-      "suggest_shares": 100,
-      "suggest_lots": 1,
-      "actual_amt": 825.3,
+      "suggest_shares": 200,
+      "suggest_lots": 2,
+      "actual_amt": 1650.6,
       "note": "T+0抗通胀避险资产，与A股低相关"
     }
   ],
@@ -174,9 +174,9 @@
       "latest_price": 1.237,
       "target_weight_pct": 50.0,
       "target_amt": 25000.0,
-      "suggest_shares": 18200,
-      "suggest_lots": 182,
-      "actual_amt": 22513.4,
+      "suggest_shares": 19000,
+      "suggest_lots": 190,
+      "actual_amt": 23503.0,
       "note": "高股息+低波动，熊市抗跌、长期复利核心"
     },
     {
@@ -185,9 +185,9 @@
       "latest_price": 1.807,
       "target_weight_pct": 50.0,
       "target_amt": 25000.0,
-      "suggest_shares": 12500,
-      "suggest_lots": 125,
-      "actual_amt": 22587.5,
+      "suggest_shares": 13000,
+      "suggest_lots": 130,
+      "actual_amt": 23491.0,
       "note": "T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价"
     }
   ],
@@ -209,9 +209,9 @@
       "latest_price": 1.237,
       "target_weight_pct": 29.5,
       "target_amt": 14741.0,
-      "suggest_shares": 10700,
-      "suggest_lots": 107,
-      "actual_amt": 13235.9,
+      "suggest_shares": 11900,
+      "suggest_lots": 119,
+      "actual_amt": 14720.3,
       "note": "高股息+低波动，熊市抗跌、长期复利核心"
     },
     {
@@ -220,9 +220,9 @@
       "latest_price": 1.807,
       "target_weight_pct": 27.2,
       "target_amt": 13605.0,
-      "suggest_shares": 6800,
-      "suggest_lots": 68,
-      "actual_amt": 12287.6,
+      "suggest_shares": 7500,
+      "suggest_lots": 75,
+      "actual_amt": 13552.5,
       "note": "T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价"
     },
     {
@@ -251,6 +251,18 @@
   "combo_action_steps": [
     {
       "action": "🟢 第二步：买入加仓",
+      "code": "512890",
+      "name": "红利低波ETF",
+      "latest_price": 1.237,
+      "current_shares": 0,
+      "target_shares": 11900,
+      "theoretical_target_shares": 11900,
+      "trade_shares": 11900,
+      "trade_lots": 119,
+      "est_cash_flow": 14720.3
+    },
+    {
+      "action": "🟢 第二步：买入加仓",
       "code": "511260",
       "name": "十年国债ETF",
       "latest_price": 136.133,
@@ -263,27 +275,15 @@
     },
     {
       "action": "🟢 第二步：买入加仓",
-      "code": "512890",
-      "name": "红利低波ETF",
-      "latest_price": 1.237,
-      "current_shares": 0,
-      "target_shares": 10700,
-      "theoretical_target_shares": 10700,
-      "trade_shares": 10700,
-      "trade_lots": 107,
-      "est_cash_flow": 13235.9
-    },
-    {
-      "action": "🟢 第二步：买入加仓",
       "code": "513030",
       "name": "德国ETF",
       "latest_price": 1.807,
       "current_shares": 0,
-      "target_shares": 6800,
-      "theoretical_target_shares": 6800,
-      "trade_shares": 6800,
-      "trade_lots": 68,
-      "est_cash_flow": 12287.6
+      "target_shares": 7500,
+      "theoretical_target_shares": 7500,
+      "trade_shares": 7500,
+      "trade_lots": 75,
+      "est_cash_flow": 13552.5
     },
     {
       "action": "🟢 第二步：买入加仓",
@@ -312,8 +312,8 @@
   ],
   "post_rebalance_positions": {
     "511260": 100,
-    "513030": 6800,
-    "512890": 10700,
+    "513030": 7500,
+    "512890": 11900,
     "511380": 100,
     "518880": 100,
     "510500": 0

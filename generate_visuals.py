@@ -66,9 +66,11 @@ def render_png_chart():
     top1, bottom1 = 125, 665
     draw.rectangle([left, top1, right, bottom1], outline=(51, 65, 85), width=2)
 
-    # Y轴范围: 25,000 ~ 122,000 元
-    y_min, y_max = 25000.0, 122000.0
-    for y_val in range(30000, 125000, 10000):
+    # 动态计算 Y 轴上限，防止未来净值增长超出图表顶部
+    max_nav_val = float(nav_df.drop(columns=["date"]).max().max())
+    y_min = 25000.0
+    y_max = max(122000.0, np.ceil(max_nav_val / 10000.0) * 10000.0 + 2000.0)
+    for y_val in range(30000, int(y_max) + 1, 10000):
         py = bottom1 - (y_val - y_min) / (y_max - y_min) * (bottom1 - top1)
         color = (71, 85, 105) if y_val == 50000 else (30, 41, 59)
         draw.line([(left, py), (right, py)], fill=color, width=2 if y_val == 50000 else 1)
@@ -142,7 +144,7 @@ def render_png_chart():
             fill=(248, 250, 252),
             font=f_sub,
         )
-        years = 5.84
+        years = max(0.1, (pd.to_datetime(dates[-1]) - pd.to_datetime(dates[0])).days / 365.25)
         cagr = ((final_v / 50000.0) ** (1.0 / years) - 1.0) * 100.0
         draw.text(
             (legend_x + 12, legend_y + 78),
@@ -213,7 +215,7 @@ def render_html_dashboard():
 </head>
 <body>
 <div class="container">
-  <h1>🚀 东方财富 5万元本金 场内ETF量化回测与实盘信号终端</h1>
+  <h1>🚀 东方财富 {live_data['total_capital']/10000:.1f}万元本金 场内ETF量化回测与实盘信号终端</h1>
   <div class="subtitle">最新行情基准日：{live_data['as_of_date']} ｜ 免可转债10万权限门槛 ｜ 0印花税 ｜ 含东方财富APP「网格条件单」参数</div>
 
   <div class="grid-cards">
@@ -273,7 +275,7 @@ def render_html_dashboard():
   </div>
 
   <div class="section">
-    <h2>📌 二、今日东方财富 50,000 元实盘一键下单清单（已按 1手=100股 取整）</h2>
+    <h2>📌 二、今日东方财富 {live_data['total_capital']:,.0f} 元实盘一键下单清单（已按 1手=100股 智能取整，资金利用率 {live_data['used_combo_cash']/live_data['total_capital']*100:.1f}%）</h2>
     <p style="color:#94a3b8;font-size:13px;">你可以根据自己的风险偏好，从下方【策略一（极低回撤固收+）】或【二合一推荐组合】中任选其一在东方财富APP下单：</p>
     <h3 style="color:#34d399;font-size:16px;">选项 1：如果你追求极度稳健（最大回撤 ~2.1%，连续6年年年正收益）👉 按【策略一】配仓：</h3>
     <table>
