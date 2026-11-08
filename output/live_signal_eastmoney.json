@@ -1,0 +1,370 @@
+{
+  "as_of_date": "2026-11-06",
+  "total_capital": 50000.0,
+  "used_combo_cash": 41228.5,
+  "reserve_cash": 8771.5,
+  "strategy1_orders": [
+    {
+      "code": "511260",
+      "name": "十年国债ETF",
+      "latest_price": 136.133,
+      "target_weight_pct": 77.8,
+      "target_amt": 38884.0,
+      "suggest_shares": 300,
+      "suggest_lots": 3,
+      "actual_amt": 40839.9,
+      "note": "长久期国债，股市大跌时的避险安全屋"
+    },
+    {
+      "code": "512890",
+      "name": "红利低波ETF",
+      "latest_price": 1.237,
+      "target_weight_pct": 9.0,
+      "target_amt": 4482.0,
+      "suggest_shares": 3300,
+      "suggest_lots": 33,
+      "actual_amt": 4082.1,
+      "note": "高股息+低波动，熊市抗跌、长期复利核心"
+    },
+    {
+      "code": "511380",
+      "name": "可转债ETF",
+      "latest_price": 12.664,
+      "target_weight_pct": 6.2,
+      "target_amt": 3115.0,
+      "suggest_shares": 200,
+      "suggest_lots": 2,
+      "actual_amt": 2532.8,
+      "note": "免10万权限门槛的一篮子可转债，进可攻退可守"
+    },
+    {
+      "code": "513030",
+      "name": "德国ETF",
+      "latest_price": 1.807,
+      "target_weight_pct": 4.4,
+      "target_amt": 2210.0,
+      "suggest_shares": 1100,
+      "suggest_lots": 11,
+      "actual_amt": 1987.7,
+      "note": "T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价"
+    },
+    {
+      "code": "518880",
+      "name": "黄金ETF",
+      "latest_price": 8.253,
+      "target_weight_pct": 2.6,
+      "target_amt": 1308.0,
+      "suggest_shares": 100,
+      "suggest_lots": 1,
+      "actual_amt": 825.3,
+      "note": "T+0抗通胀避险资产，与A股低相关"
+    }
+  ],
+  "strategy1_grid_params": [
+    {
+      "code": "512890",
+      "name": "红利低波ETF",
+      "base_price": 1.237,
+      "step_up_sell_pct": "+2.39%",
+      "step_down_buy_pct": "-2.39%",
+      "price_range": "1.134 ~ 1.355",
+      "shares_per_grid": 2300,
+      "est_amount_per_grid": 2845.1,
+      "est_gross_profit": 68.0,
+      "status_note": "✅ 不免5定制大网格：单格毛利¥68.0，扣10元佣金后【净赚¥58.0/次】"
+    },
+    {
+      "code": "513030",
+      "name": "德国ETF",
+      "base_price": 1.807,
+      "step_up_sell_pct": "+2.20%",
+      "step_down_buy_pct": "-2.20%",
+      "price_range": "1.668 ~ 1.966",
+      "shares_per_grid": 1500,
+      "est_amount_per_grid": 2710.5,
+      "est_gross_profit": 59.6,
+      "status_note": "✅ 不免5定制大网格：单格毛利¥59.6，扣10元佣金后【净赚¥49.6/次】"
+    },
+    {
+      "code": "511380",
+      "name": "可转债ETF",
+      "base_price": 12.664,
+      "step_up_sell_pct": "+2.46%",
+      "step_down_buy_pct": "-2.46%",
+      "price_range": "11.574 ~ 13.910",
+      "shares_per_grid": 100,
+      "est_amount_per_grid": 1266.4,
+      "est_gross_profit": 31.2,
+      "status_note": "⏸️ 当前仅底仓观察，不开网格（避免5元最低佣金磨损）"
+    },
+    {
+      "code": "518880",
+      "name": "黄金ETF",
+      "base_price": 8.253,
+      "step_up_sell_pct": "+2.20%",
+      "step_down_buy_pct": "-2.20%",
+      "price_range": "7.618 ~ 8.979",
+      "shares_per_grid": 100,
+      "est_amount_per_grid": 825.3,
+      "est_gross_profit": 18.2,
+      "status_note": "⏸️ 当前仅底仓观察，不开网格（避免5元最低佣金磨损）"
+    }
+  ],
+  "strategy2_momentum_board": [
+    {
+      "code": "513030",
+      "name": "德国ETF",
+      "raw_price": 1.807,
+      "ret_20d_pct": 2.32,
+      "ret_5d_pct": 1.01,
+      "vol_20d_pct": 18.25,
+      "above_ma20": "是",
+      "momentum_r2_score": 0.63,
+      "passed_filter": "✅ 入选"
+    },
+    {
+      "code": "512890",
+      "name": "红利低波ETF",
+      "raw_price": 1.237,
+      "ret_20d_pct": 2.4,
+      "ret_5d_pct": -0.48,
+      "vol_20d_pct": 15.3,
+      "above_ma20": "是",
+      "momentum_r2_score": 0.114,
+      "passed_filter": "✅ 入选"
+    },
+    {
+      "code": "511380",
+      "name": "可转债ETF",
+      "raw_price": 12.664,
+      "ret_20d_pct": -2.06,
+      "ret_5d_pct": 3.13,
+      "vol_20d_pct": 20.72,
+      "above_ma20": "是",
+      "momentum_r2_score": -0.02,
+      "passed_filter": "🛡️ 避险剔除"
+    },
+    {
+      "code": "518880",
+      "name": "黄金ETF",
+      "raw_price": 8.253,
+      "ret_20d_pct": -4.22,
+      "ret_5d_pct": 1.7,
+      "vol_20d_pct": 20.82,
+      "above_ma20": "否(破位)",
+      "momentum_r2_score": -0.212,
+      "passed_filter": "🛡️ 避险剔除"
+    },
+    {
+      "code": "510500",
+      "name": "中证500ETF",
+      "raw_price": 6.629,
+      "ret_20d_pct": -8.97,
+      "ret_5d_pct": 5.14,
+      "vol_20d_pct": 35.1,
+      "above_ma20": "否(破位)",
+      "momentum_r2_score": -0.293,
+      "passed_filter": "🛡️ 避险剔除"
+    }
+  ],
+  "strategy2_orders": [
+    {
+      "code": "512890",
+      "name": "红利低波ETF",
+      "latest_price": 1.237,
+      "target_weight_pct": 50.0,
+      "target_amt": 25000.0,
+      "suggest_shares": 18200,
+      "suggest_lots": 182,
+      "actual_amt": 22513.4,
+      "note": "高股息+低波动，熊市抗跌、长期复利核心"
+    },
+    {
+      "code": "513030",
+      "name": "德国ETF",
+      "latest_price": 1.807,
+      "target_weight_pct": 50.0,
+      "target_amt": 25000.0,
+      "suggest_shares": 12500,
+      "suggest_lots": 125,
+      "actual_amt": 22587.5,
+      "note": "T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价"
+    }
+  ],
+  "combo_orders": [
+    {
+      "code": "511260",
+      "name": "十年国债ETF",
+      "latest_price": 136.133,
+      "target_weight_pct": 38.9,
+      "target_amt": 19442.0,
+      "suggest_shares": 100,
+      "suggest_lots": 1,
+      "actual_amt": 13613.3,
+      "note": "长久期国债，股市大跌时的避险安全屋"
+    },
+    {
+      "code": "512890",
+      "name": "红利低波ETF",
+      "latest_price": 1.237,
+      "target_weight_pct": 29.5,
+      "target_amt": 14741.0,
+      "suggest_shares": 10700,
+      "suggest_lots": 107,
+      "actual_amt": 13235.9,
+      "note": "高股息+低波动，熊市抗跌、长期复利核心"
+    },
+    {
+      "code": "513030",
+      "name": "德国ETF",
+      "latest_price": 1.807,
+      "target_weight_pct": 27.2,
+      "target_amt": 13605.0,
+      "suggest_shares": 6800,
+      "suggest_lots": 68,
+      "actual_amt": 12287.6,
+      "note": "T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价"
+    },
+    {
+      "code": "511380",
+      "name": "可转债ETF",
+      "latest_price": 12.664,
+      "target_weight_pct": 3.1,
+      "target_amt": 1558.0,
+      "suggest_shares": 100,
+      "suggest_lots": 1,
+      "actual_amt": 1266.4,
+      "note": "免10万权限门槛的一篮子可转债，进可攻退可守"
+    },
+    {
+      "code": "518880",
+      "name": "黄金ETF",
+      "latest_price": 8.253,
+      "target_weight_pct": 1.3,
+      "target_amt": 654.0,
+      "suggest_shares": 100,
+      "suggest_lots": 1,
+      "actual_amt": 825.3,
+      "note": "T+0抗通胀避险资产，与A股低相关"
+    }
+  ],
+  "combo_action_steps": [
+    {
+      "action": "🟢 第二步：买入加仓",
+      "code": "511260",
+      "name": "十年国债ETF",
+      "latest_price": 136.133,
+      "current_shares": 0,
+      "target_shares": 100,
+      "theoretical_target_shares": 100,
+      "trade_shares": 100,
+      "trade_lots": 1,
+      "est_cash_flow": 13613.3
+    },
+    {
+      "action": "🟢 第二步：买入加仓",
+      "code": "512890",
+      "name": "红利低波ETF",
+      "latest_price": 1.237,
+      "current_shares": 0,
+      "target_shares": 10700,
+      "theoretical_target_shares": 10700,
+      "trade_shares": 10700,
+      "trade_lots": 107,
+      "est_cash_flow": 13235.9
+    },
+    {
+      "action": "🟢 第二步：买入加仓",
+      "code": "513030",
+      "name": "德国ETF",
+      "latest_price": 1.807,
+      "current_shares": 0,
+      "target_shares": 6800,
+      "theoretical_target_shares": 6800,
+      "trade_shares": 6800,
+      "trade_lots": 68,
+      "est_cash_flow": 12287.6
+    },
+    {
+      "action": "🟢 第二步：买入加仓",
+      "code": "511380",
+      "name": "可转债ETF",
+      "latest_price": 12.664,
+      "current_shares": 0,
+      "target_shares": 100,
+      "theoretical_target_shares": 100,
+      "trade_shares": 100,
+      "trade_lots": 1,
+      "est_cash_flow": 1266.4
+    },
+    {
+      "action": "🟢 第二步：买入加仓",
+      "code": "518880",
+      "name": "黄金ETF",
+      "latest_price": 8.253,
+      "current_shares": 0,
+      "target_shares": 100,
+      "theoretical_target_shares": 100,
+      "trade_shares": 100,
+      "trade_lots": 1,
+      "est_cash_flow": 825.3
+    }
+  ],
+  "post_rebalance_positions": {
+    "511260": 100,
+    "513030": 6800,
+    "512890": 10700,
+    "511380": 100,
+    "518880": 100,
+    "510500": 0
+  },
+  "nasdaq_premium_guard": {
+    "status": "✅ 溢价极低（安全可买）",
+    "allow_buy": true,
+    "adjusted_weight": 0.2721049142943321,
+    "redirect_to_bond_weight": 0.0,
+    "target_etf": {
+      "code": "513030",
+      "name": "华安德国ETF(主力)",
+      "price": 1.807,
+      "iopv": 1.8045,
+      "premium_pct": 0.14,
+      "source": "实时行情官方IOPV"
+    },
+    "all_candidates": [
+      {
+        "code": "513030",
+        "name": "华安德国ETF(主力)",
+        "price": 1.807,
+        "iopv": 1.8045,
+        "premium_pct": 0.14,
+        "source": "实时行情官方IOPV"
+      },
+      {
+        "code": "513630",
+        "name": "港股红利低波ETF",
+        "price": 1.614,
+        "iopv": 1.6072,
+        "premium_pct": 0.42,
+        "source": "实时行情官方IOPV"
+      },
+      {
+        "code": "513400",
+        "name": "鹏华道琼斯ETF",
+        "price": 1.29,
+        "iopv": 1.2583,
+        "premium_pct": 2.52,
+        "source": "实时行情官方IOPV"
+      },
+      {
+        "code": "513100",
+        "name": "国泰纳指ETF(高溢价对照)",
+        "price": 2.158,
+        "iopv": 1.7797,
+        "premium_pct": 21.26,
+        "source": "实时行情官方IOPV"
+      }
+    ],
+    "advice": "✅ 海外主力【513030 德国ETF】当前场内现价 1.807 vs 官方实时IOPV 1.8045，实时溢价率仅 +0.14%（远低于 2.5% 熔断线，对比纳指ETF 513100 的 +21.26% 高溢价省下超过 21% 溢价成本），可放心按信号建仓！"
+  }
+}
