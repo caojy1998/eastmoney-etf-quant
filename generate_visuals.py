@@ -219,7 +219,7 @@ def render_html_dashboard():
 <body>
 <div class="container">
   <h1>🚀 东方财富 {live_data['total_capital']/10000:.1f}万元本金 场内ETF量化回测与实盘信号终端</h1>
-  <div class="subtitle">最新行情基准日：{live_data['as_of_date']} ｜ 免可转债10万权限门槛 ｜ 0印花税 ｜ 含东方财富APP「网格条件单」参数</div>
+  <div class="subtitle">最新行情基准日：{live_data['as_of_date']} ｜ 本次实时刷新时间：<b style="color:#34d399;">{live_data.get('generated_at', '')}</b> ｜ 免可转债10万权限门槛 ｜ 0印花税</div>
 
   <div class="grid-cards">
     <div class="card" style="border-top: 4px solid #34d399;">

@@ -339,6 +339,7 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
 
     result = {
         "as_of_date": latest_dt.strftime("%Y-%m-%d"),
+        "generated_at": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
         "total_capital": total_capital,
         "used_combo_cash": used_combo_cash,
         "reserve_cash": reserve_cash,

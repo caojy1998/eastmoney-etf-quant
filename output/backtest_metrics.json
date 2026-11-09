@@ -3,9 +3,9 @@
     {
       "name": "策略一：全天候“超级固收+” + 东财ATR网格",
       "initial_capital": 59951.83,
-      "final_capital": 86006.39,
-      "net_profit": 26054.56,
-      "total_return_pct": 43.46,
+      "final_capital": 86015.04,
+      "net_profit": 26063.21,
+      "total_return_pct": 43.47,
       "cagr_pct": 6.37,
       "max_drawdown_pct": -2.36,
       "ann_vol_pct": 2.88,
@@ -18,37 +18,37 @@
         "2023": 6.45,
         "2024": 10.33,
         "2025": 8.93,
-        "2026": 3.99
+        "2026": 4.01
       }
     },
     {
       "name": "策略二：跨市场ETF动量轮动 + 国债避险",
       "initial_capital": 59930.42,
-      "final_capital": 137366.82,
-      "net_profit": 77436.4,
-      "total_return_pct": 129.21,
-      "cagr_pct": 15.25,
+      "final_capital": 137496.28,
+      "net_profit": 77565.86,
+      "total_return_pct": 129.43,
+      "cagr_pct": 15.27,
       "max_drawdown_pct": -15.98,
       "ann_vol_pct": 12.46,
       "sharpe_ratio": 1.06,
-      "calmar_ratio": 0.95,
-      "monthly_win_rate_pct": 64.3,
+      "calmar_ratio": 0.96,
+      "monthly_win_rate_pct": 65.7,
       "yearly_returns_pct": {
-        "2021": 5.53,
-        "2022": 2.45,
+        "2021": 5.55,
+        "2022": 2.44,
         "2023": 12.81,
         "2024": 11.63,
         "2025": 48.15,
-        "2026": 13.64
+        "2026": 13.74
       }
     },
     {
       "name": "推荐组合：50%全天候网格 + 50%动量轮动",
       "initial_capital": 59941.13,
-      "final_capital": 111686.61,
-      "net_profit": 51745.48,
-      "total_return_pct": 86.33,
-      "cagr_pct": 11.23,
+      "final_capital": 111755.66,
+      "net_profit": 51814.53,
+      "total_return_pct": 86.44,
+      "cagr_pct": 11.25,
       "max_drawdown_pct": -9.07,
       "ann_vol_pct": 7.71,
       "sharpe_ratio": 1.2,
@@ -56,20 +56,20 @@
       "monthly_win_rate_pct": 67.1,
       "yearly_returns_pct": {
         "2021": 5.86,
-        "2022": 2.0,
+        "2022": 1.99,
         "2023": 9.63,
         "2024": 11.0,
         "2025": 29.25,
-        "2026": 9.72
+        "2026": 9.78
       }
     },
     {
       "name": "基准A：纯十年国债ETF (511260) 持有",
       "initial_capital": 60000.0,
-      "final_capital": 78061.76,
-      "net_profit": 18061.76,
-      "total_return_pct": 30.1,
-      "cagr_pct": 4.6,
+      "final_capital": 78069.79,
+      "net_profit": 18069.79,
+      "total_return_pct": 30.12,
+      "cagr_pct": 4.61,
       "max_drawdown_pct": -2.27,
       "ann_vol_pct": 2.19,
       "sharpe_ratio": 1.19,
@@ -81,7 +81,7 @@
         "2023": 4.54,
         "2024": 9.28,
         "2025": 0.36,
-        "2026": 4.22
+        "2026": 4.23
       }
     },
     {
@@ -108,10 +108,10 @@
     {
       "name": "基准C：沪深300ETF (510300) 买入死拿",
       "initial_capital": 60000.0,
-      "final_capital": 51377.25,
-      "net_profit": -8622.75,
-      "total_return_pct": -14.37,
-      "cagr_pct": -2.62,
+      "final_capital": 51302.91,
+      "net_profit": -8697.09,
+      "total_return_pct": -14.5,
+      "cagr_pct": -2.64,
       "max_drawdown_pct": -44.75,
       "ann_vol_pct": 19.27,
       "sharpe_ratio": -0.24,
@@ -123,7 +123,7 @@
         "2023": -10.43,
         "2024": 18.39,
         "2025": 21.49,
-        "2026": -10.43
+        "2026": -10.56
       }
     }
   ],
@@ -233,7 +233,7 @@
         "512890": 0.5
       },
       "turnover": 1.0,
-      "nav": 129771.66
+      "nav": 129782.27
     },
     {
       "date": "2026-07-31",
@@ -242,7 +242,7 @@
         "513030": 0.5
       },
       "turnover": 1.0,
-      "nav": 133205.58
+      "nav": 133216.48
     },
     {
       "date": "2026-08-07",
@@ -251,7 +251,7 @@
         "513030": 0.5
       },
       "turnover": 1.0,
-      "nav": 133312.83
+      "nav": 133323.74
     },
     {
       "date": "2026-08-28",
@@ -260,7 +260,7 @@
         "518880": 0.5
       },
       "turnover": 1.0,
-      "nav": 138552.98
+      "nav": 138564.31
     },
     {
       "date": "2026-09-04",
@@ -269,7 +269,7 @@
         "512890": 0.5
       },
       "turnover": 1.0,
-      "nav": 137592.72
+      "nav": 137603.98
     },
     {
       "date": "2026-09-18",
@@ -277,7 +277,7 @@
         "511260": 1.0
       },
       "turnover": 1.0,
-      "nav": 136316.97
+      "nav": 136328.12
     },
     {
       "date": "2026-10-12",
@@ -286,7 +286,7 @@
         "512890": 0.5
       },
       "turnover": 1.0,
-      "nav": 136512.14
+      "nav": 136523.31
     },
     {
       "date": "2026-11-09",
@@ -295,7 +295,7 @@
         "513030": 0.5
       },
       "turnover": 1.0,
-      "nav": 137366.82
+      "nav": 137496.28
     }
   ]
 }

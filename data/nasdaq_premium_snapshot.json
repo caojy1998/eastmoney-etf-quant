@@ -2,33 +2,33 @@
   {
     "code": "513630",
     "name": "港股红利低波ETF",
-    "price": 1.611,
-    "iopv": 1.6114,
-    "premium_pct": -0.02,
+    "price": 1.612,
+    "iopv": 1.6106,
+    "premium_pct": 0.09,
     "source": "实时行情官方IOPV"
   },
   {
     "code": "513030",
     "name": "华安德国ETF(主力)",
-    "price": 1.792,
+    "price": 1.794,
     "iopv": 1.7683,
-    "premium_pct": 1.34,
+    "premium_pct": 1.45,
     "source": "实时行情官方IOPV"
   },
   {
     "code": "513400",
     "name": "鹏华道琼斯ETF",
-    "price": 1.297,
+    "price": 1.296,
     "iopv": 1.2528,
-    "premium_pct": 3.53,
+    "premium_pct": 3.45,
     "source": "实时行情官方IOPV"
   },
   {
     "code": "513100",
     "name": "国泰纳指ETF(高溢价对照)",
-    "price": 2.159,
+    "price": 2.155,
     "iopv": 1.8062,
-    "premium_pct": 19.53,
+    "premium_pct": 19.31,
     "source": "实时行情官方IOPV"
   }
 ]
