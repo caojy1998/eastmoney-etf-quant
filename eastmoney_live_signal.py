@@ -21,7 +21,7 @@ if hasattr(sys.stdout, "reconfigure"):
 OUTPUT_DIR = Path(__file__).parent / "output"
 
 
-def generate_live_signals(total_capital: float = 50000.0) -> dict:
+def generate_live_signals(total_capital: float = 60000.0) -> dict:
     data = load_aligned_data(start_date="2020-09-01")
     close_df = data["close"]
     high_df = data["high"]
@@ -191,69 +191,75 @@ def generate_live_signals(total_capital: float = 50000.0) -> dict:
             "status_note": grid_note,
         })
 
-    def build_order_sheet(weights_map: dict, capital: float, min_reserve_ratio: float = 0.06) -> list[dict]:
+    def build_order_sheet(weights_map: dict, capital: float, min_reserve_ratio: float = 0.055) -> list[dict]:
         """
-        智能整手分配算法（消除双重扣减备用金损耗）：
-        1. 先按 100% 理论目标金额 (capital * w) 计算各 ETF 的 100 股整手数：
-           由于 511260(十年国债ETF) 1手约 1.36 万元，其向下取整留出的零头天然可充当网格备用金，
-           无需再对红利低波(512890)、德国ETF(513030)等小面值核心仓位额外打 9 折。
-        2. 若因 511260 向上取整导致总持仓超过 (1 - min_reserve_ratio) 上限，
-           优先将向上取整的 511260 退回 1 手（向下取整），若仍超限再按比例微调小面值品种，确保永不超支。
+        两阶段智能整手分配算法（目标仓位利用率 ~94.5%，仅留 1 格网格低吸备用金 ~5.5%）：
+        1. 第一阶段：先确定高面值国债 ETF (511260，1手≈1.36万元) 的整手数；
+        2. 第二阶段：将扣除 511260 后的剩余可投资金 (investable_cap - actual_511260)，
+           按权重比例精准分配给其余小面值 ETF (512890/513030/511380/518880，1手仅120~1270元)，
+           彻底消除因 511260 整手跨度大而造成的数千元资金闲置！
         """
-        max_investable = capital * (1.0 - min_reserve_ratio)
+        investable_cap = capital * (1.0 - min_reserve_ratio)
+        w_bond = weights_map.get("511260", 0.0)
+        px_bond = float(raw_close_df.loc[latest_dt, "511260"])
+        lot_bond = px_bond * 100.0
+
+        lots_map = {}
+        if w_bond > 0.005:
+            lots_b = int(round((investable_cap * w_bond) / lot_bond))
+            while lots_b * lot_bond > investable_cap and lots_b > 0:
+                lots_b -= 1
+            lots_map["511260"] = lots_b
+            amt_bond = lots_b * lot_bond
+        else:
+            amt_bond = 0.0
+
+        rem_investable = max(0.0, investable_cap - amt_bond)
+        other_codes = [c for c, w in weights_map.items() if c != "511260" and w > 0.005]
+        other_w_sum = sum(weights_map[c] for c in other_codes)
+
+        for c in other_codes:
+            raw_px = float(raw_close_df.loc[latest_dt, c])
+            lot_cost = raw_px * 100.0
+            alloc_target = rem_investable * (weights_map[c] / other_w_sum) if other_w_sum > 0 else 0.0
+            lots = int(round(alloc_target / lot_cost))
+            if lots == 0 and (capital * weights_map[c]) >= lot_cost * 0.55 and rem_investable >= lot_cost:
+                lots = 1
+            lots_map[c] = lots
+
         orders = []
         for c, w in sorted(weights_map.items(), key=lambda x: x[1], reverse=True):
             if w <= 0.005:
                 continue
             raw_px = float(raw_close_df.loc[latest_dt, c])
-            target_amt = capital * w
-            lot_cost = raw_px * 100.0
-            lots = int(round(target_amt / lot_cost))
-            if lots == 0 and target_amt >= lot_cost * 0.55:
-                lots = 1
+            lots = lots_map.get(c, 0)
             orders.append({
                 "code": c,
                 "name": ETF_UNIVERSE[c]["name"],
                 "latest_price": round(raw_px, 3),
                 "target_weight_pct": round(w * 100, 1),
-                "target_amt": round(target_amt, 0),
+                "target_amt": round(capital * w, 0),
                 "suggest_shares": lots * 100,
                 "suggest_lots": lots,
                 "actual_amt": round(lots * 100 * raw_px, 2),
-                "lot_cost": lot_cost,
                 "note": ETF_UNIVERSE[c]["desc"],
             })
 
+        # 防超支微调：若四舍五入后略超 investable_cap，从持仓最大的小面值品种减 1 手
         total_spend = sum(item["actual_amt"] for item in orders)
-        # 若总花费超出上限，且 511260 向上取整（或 511260 单品种已超上限），则将 511260 减 1 手以释放现金备用金
-        if total_spend > max_investable:
-            for item in orders:
-                if item["code"] == "511260" and item["suggest_lots"] >= 1 and (
-                    item["actual_amt"] > item["target_amt"] or item["actual_amt"] > max_investable
-                ):
-                    item["suggest_lots"] -= 1
-                    item["suggest_shares"] = item["suggest_lots"] * 100
-                    item["actual_amt"] = round(item["suggest_shares"] * item["latest_price"], 2)
-                    break
-
-        # 若仍超出上限（例如纯策略二无国债时），按比例缩减高仓位小面值品种直到满足最低备用金要求
-        total_spend = sum(item["actual_amt"] for item in orders)
-        while total_spend > max_investable:
+        while total_spend > capital * (1.0 - 0.04):
             candidates = [x for x in orders if x["code"] != "511260" and x["suggest_lots"] >= 1]
             if not candidates:
                 break
-            # 选择当前实际金额超出目标金额最多（或持仓最大）的小面值品种减 1 手
-            target_item = max(candidates, key=lambda x: (x["actual_amt"] - x["target_amt"] * (1.0 - min_reserve_ratio), x["actual_amt"]))
+            target_item = max(candidates, key=lambda x: x["actual_amt"])
             target_item["suggest_lots"] -= 1
             target_item["suggest_shares"] = target_item["suggest_lots"] * 100
             target_item["actual_amt"] = round(target_item["suggest_shares"] * target_item["latest_price"], 2)
             total_spend = sum(item["actual_amt"] for item in orders)
 
-        for item in orders:
-            item.pop("lot_cost", None)
         return orders
 
-    combo_orders = build_order_sheet(weights_combo, total_capital, min_reserve_ratio=0.06)
+    combo_orders = build_order_sheet(weights_combo, total_capital, min_reserve_ratio=0.055)
 
     all_codes = ["511260", "513030", "512890", "511380", "518880", "510500"]
     target_map = {item["code"]: item["suggest_shares"] for item in combo_orders}
@@ -368,4 +374,4 @@ def generate_live_signals(total_capital: float = 50000.0) -> dict:
 
 
 if __name__ == "__main__":
-    generate_live_signals(50000.0)
+    generate_live_signals(60000.0)

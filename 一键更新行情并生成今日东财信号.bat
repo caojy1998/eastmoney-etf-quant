@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ======================================================================
-echo   东方财富 5万元本金 场内ETF量化系统 - 一键行情更新与今日实盘信号生成
+echo   东方财富 6万元本金 场内ETF量化系统 - 一键行情更新与今日实盘信号生成
 echo ======================================================================
 set PYTHON_EXE=C:\Users\zero-max\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe
 

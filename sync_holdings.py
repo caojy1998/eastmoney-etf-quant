@@ -34,7 +34,7 @@ def sync():
     payload = {
         "note": f"已于 {live.get('as_of_date', '')} 同步最新二合一策略持仓。如有微调也可直接用记事本修改股数。",
         "last_sync_date": live.get("as_of_date", ""),
-        "total_budget": live.get("total_capital", 50000.0),
+        "total_budget": live.get("total_capital", 60000.0),
         "positions": new_pos,
     }
     with open(HOLDINGS_JSON, "w", encoding="utf-8") as f:

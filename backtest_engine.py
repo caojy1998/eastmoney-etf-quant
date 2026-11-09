@@ -23,7 +23,7 @@ if hasattr(sys.stdout, "reconfigure"):
 DATA_DIR = Path(__file__).parent / "data"
 OUTPUT_DIR = Path(__file__).parent / "output"
 
-INITIAL_CAPITAL = 50000.0  # 5万元初始本金
+INITIAL_CAPITAL = 60000.0  # 6万元初始本金
 COMMISSION_RATE = 0.00006  # 东方财富场内ETF佣金约万0.6（免印花税）
 SLIPPAGE_RATE = 0.0002     # 双边滑点冲击损耗万2
 TOTAL_COST_RATE = COMMISSION_RATE + SLIPPAGE_RATE
@@ -359,7 +359,7 @@ def main():
 
     eval_start = "2021-01-04"
     print("==========================================================================")
-    print("🚀 东方财富 5万元场内 ETF 量化策略 近6年真实历史回测 (2021-01 ~ 2026-11)")
+    print(f"🚀 东方财富 {INITIAL_CAPITAL/10000:.1f}万元场内 ETF 量化策略 近6年真实历史回测 (2021-01 ~ 2026-11)")
     print("==========================================================================")
 
     # 运行策略一：全天候“超级固收+”风险平价 + ATR智能网格
@@ -396,7 +396,7 @@ def main():
         calc_performance_metrics(nav_hs300, "基准C：沪深300ETF (510300) 买入死拿"),
     ]
 
-    print("\n【一、核心绩效指标对比（初始本金：50,000 元，已扣除东财真实佣金与滑点）】")
+    print(f"\n【一、核心绩效指标对比（初始本金：{INITIAL_CAPITAL:,.0f} 元，已扣除东财真实佣金与滑点）】")
     summary_rows = []
     for m in metrics_list:
         summary_rows.append({

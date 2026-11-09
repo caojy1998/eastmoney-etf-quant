@@ -47,10 +47,13 @@ def render_png_chart():
     f_label = get_chinese_font(17)
     f_small = get_chinese_font(15)
 
+    init_cap = float(round(nav_df["bench_fixed_income"].iloc[0], -3))
+    cap_wan = f"{init_cap/10000:.0f}万" if init_cap % 10000 == 0 else f"{init_cap/10000:.1f}万"
+
     # 标题
     draw.text(
         (70, 28),
-        "东方财富 5万元本金 场内ETF量化策略 6年真实历史回测对比 (2021.01 ~ 2026.11)",
+        f"东方财富 {cap_wan}元本金 场内ETF量化策略 6年真实历史回测对比 (2021.01 ~ 2026.11)",
         fill=(248, 250, 252),
         font=f_title,
     )
@@ -72,8 +75,8 @@ def render_png_chart():
     y_max = max(122000.0, np.ceil(max_nav_val / 10000.0) * 10000.0 + 2000.0)
     for y_val in range(30000, int(y_max) + 1, 10000):
         py = bottom1 - (y_val - y_min) / (y_max - y_min) * (bottom1 - top1)
-        color = (71, 85, 105) if y_val == 50000 else (30, 41, 59)
-        draw.line([(left, py), (right, py)], fill=color, width=2 if y_val == 50000 else 1)
+        color = (71, 85, 105) if y_val == int(init_cap) else (30, 41, 59)
+        draw.line([(left, py), (right, py)], fill=color, width=2 if y_val == int(init_cap) else 1)
         draw.text((20, py - 10), f"¥{y_val:,.0f}", fill=(148, 163, 184), font=f_small)
 
     # 下面板区域：最大回撤曲线 (y: 740 ~ 1060)
@@ -110,7 +113,7 @@ def render_png_chart():
     # 绘制曲线与右侧图例卡片
     legend_x = 1412
     legend_y = 135
-    draw.text((legend_x, legend_y - 32), "期末净值与核心指标 (5万本金)", fill=(248, 250, 252), font=f_sub)
+    draw.text((legend_x, legend_y - 32), f"期末净值与核心指标 ({cap_wan}本金)", fill=(248, 250, 252), font=f_sub)
 
     for col, label, color, width in series_cfg:
         vals = nav_df[col].values
@@ -134,7 +137,7 @@ def render_png_chart():
 
         # 右侧指标卡片
         final_v = vals[-1]
-        tot_ret = (final_v / 50000.0 - 1.0) * 100.0
+        tot_ret = (final_v / init_cap - 1.0) * 100.0
         max_dd = dd.min()
         draw.rectangle([legend_x, legend_y, W - 25, legend_y + 135], fill=(30, 41, 59), outline=color, width=2)
         draw.text((legend_x + 12, legend_y + 10), label, fill=color, font=f_label)
@@ -145,7 +148,7 @@ def render_png_chart():
             font=f_sub,
         )
         years = max(0.1, (pd.to_datetime(dates[-1]) - pd.to_datetime(dates[0])).days / 365.25)
-        cagr = ((final_v / 50000.0) ** (1.0 / years) - 1.0) * 100.0
+        cagr = ((final_v / init_cap) ** (1.0 / years) - 1.0) * 100.0
         draw.text(
             (legend_x + 12, legend_y + 78),
             f"年化收益: {cagr:+.2f}%  |  最大回撤: {max_dd:.2f}%",
@@ -154,7 +157,7 @@ def render_png_chart():
         )
         draw.text(
             (legend_x + 12, legend_y + 104),
-            f"净赚利润: {'+' if final_v>=50000 else ''}¥{final_v - 50000:,.0f} 元",
+            f"净赚利润: {'+' if final_v>=init_cap else ''}¥{final_v - init_cap:,.0f} 元",
             fill=(148, 163, 184),
             font=f_small,
         )
@@ -190,7 +193,7 @@ def render_html_dashboard():
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>东方财富 5万元场内ETF量化回测与实盘信号终端</title>
+<title>东方财富 {live_data['total_capital']/10000:.1f}万元场内ETF量化回测与实盘信号终端</title>
 <style>
   body {{ font-family: 'Microsoft YaHei', sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }}
   .container {{ max-width: 1320px; margin: 0 auto; }}
@@ -235,12 +238,12 @@ def render_html_dashboard():
       <h3 class="blue">⭐ 推荐组合：50%全天候网格 + 50%动量轮动</h3>
       <div class="big-num blue">¥{bt_data['metrics'][2]['final_capital']:,.0f} <span style="font-size:16px;">(+{bt_data['metrics'][2]['total_return_pct']}%)</span></div>
       <div>年化收益：<b>{bt_data['metrics'][2]['cagr_pct']}%</b> ｜ 最大回撤：<b>{bt_data['metrics'][2]['max_drawdown_pct']}%</b></div>
-      <div style="color:#94a3b8;font-size:13px;margin-top:6px;">5万元实战最佳平衡点：收益接近翻倍，回撤控制在7.5%以内。</div>
+      <div style="color:#94a3b8;font-size:13px;margin-top:6px;">{live_data['total_capital']/10000:.1f}万元实战最佳平衡点：收益接近翻倍，回撤控制在8%以内。</div>
     </div>
   </div>
 
   <div class="section">
-    <h2>📊 一、2021 ~ 2026 历史回测核心指标与分年度收益对比（本金：50,000元）</h2>
+    <h2>📊 一、2021 ~ 2026 历史回测核心指标与分年度收益对比（本金：{live_data['total_capital']:,.0f}元）</h2>
     <table>
       <thead>
         <tr>
