@@ -1,6 +1,6 @@
 {
   "as_of_date": "2026-11-09",
-  "generated_at": "2026-11-09 11:00:22",
+  "generated_at": "2026-11-09 11:19:51",
   "total_capital": 60000.0,
   "used_combo_cash": 56893.4,
   "reserve_cash": 3106.6,
@@ -251,64 +251,64 @@
   ],
   "combo_action_steps": [
     {
-      "action": "🟢 第二步：买入加仓",
+      "action": "⚪ 保持不动",
       "code": "511260",
       "name": "十年国债ETF",
       "latest_price": 136.142,
-      "current_shares": 0,
+      "current_shares": 200,
       "target_shares": 200,
       "theoretical_target_shares": 200,
-      "trade_shares": 200,
-      "trade_lots": 2,
-      "est_cash_flow": 27228.4
+      "trade_shares": 0,
+      "trade_lots": 0,
+      "est_cash_flow": 0.0
     },
     {
-      "action": "🟢 第二步：买入加仓",
-      "code": "512890",
-      "name": "红利低波ETF",
-      "latest_price": 1.237,
-      "current_shares": 0,
-      "target_shares": 11300,
-      "theoretical_target_shares": 11300,
-      "trade_shares": 11300,
-      "trade_lots": 113,
-      "est_cash_flow": 13978.1
-    },
-    {
-      "action": "🟢 第二步：买入加仓",
+      "action": "⚪ 保持不动",
       "code": "513030",
       "name": "德国ETF",
       "latest_price": 1.794,
-      "current_shares": 0,
+      "current_shares": 7100,
       "target_shares": 7100,
       "theoretical_target_shares": 7100,
-      "trade_shares": 7100,
-      "trade_lots": 71,
-      "est_cash_flow": 12737.4
+      "trade_shares": 0,
+      "trade_lots": 0,
+      "est_cash_flow": 0.0
     },
     {
-      "action": "🟢 第二步：买入加仓",
-      "code": "518880",
-      "name": "黄金ETF",
-      "latest_price": 8.401,
-      "current_shares": 0,
-      "target_shares": 200,
-      "theoretical_target_shares": 200,
-      "trade_shares": 200,
-      "trade_lots": 2,
-      "est_cash_flow": 1680.2
+      "action": "⚪ 保持不动",
+      "code": "512890",
+      "name": "红利低波ETF",
+      "latest_price": 1.237,
+      "current_shares": 11300,
+      "target_shares": 11300,
+      "theoretical_target_shares": 11300,
+      "trade_shares": 0,
+      "trade_lots": 0,
+      "est_cash_flow": 0.0
     },
     {
-      "action": "🟢 第二步：买入加仓",
+      "action": "⚪ 保持不动",
       "code": "511380",
       "name": "可转债ETF",
       "latest_price": 12.693,
-      "current_shares": 0,
+      "current_shares": 100,
       "target_shares": 100,
       "theoretical_target_shares": 100,
-      "trade_shares": 100,
-      "trade_lots": 1,
-      "est_cash_flow": 1269.3
+      "trade_shares": 0,
+      "trade_lots": 0,
+      "est_cash_flow": 0.0
+    },
+    {
+      "action": "⚪ 保持不动",
+      "code": "518880",
+      "name": "黄金ETF",
+      "latest_price": 8.401,
+      "current_shares": 200,
+      "target_shares": 200,
+      "theoretical_target_shares": 200,
+      "trade_shares": 0,
+      "trade_lots": 0,
+      "est_cash_flow": 0.0
     }
   ],
   "post_rebalance_positions": {
@@ -336,9 +336,9 @@
       {
         "code": "513630",
         "name": "港股红利低波ETF",
-        "price": 1.612,
-        "iopv": 1.6106,
-        "premium_pct": 0.09,
+        "price": 1.613,
+        "iopv": 1.6113,
+        "premium_pct": 0.11,
         "source": "实时行情官方IOPV"
       },
       {
@@ -360,12 +360,12 @@
       {
         "code": "513100",
         "name": "国泰纳指ETF(高溢价对照)",
-        "price": 2.155,
+        "price": 2.151,
         "iopv": 1.8062,
-        "premium_pct": 19.31,
+        "premium_pct": 19.09,
         "source": "实时行情官方IOPV"
       }
     ],
-    "advice": "✅ 海外主力【513030 德国ETF】当前场内现价 1.794 vs 官方实时IOPV 1.7683，实时溢价率仅 +1.45%（远低于 2.5% 熔断线，对比纳指ETF 513100 的 +19.31% 高溢价省下超过 21% 溢价成本），可放心按信号建仓！"
+    "advice": "✅ 海外主力【513030 德国ETF】当前场内现价 1.794 vs 官方实时IOPV 1.7683，实时溢价率仅 +1.45%（远低于 2.5% 熔断线，对比纳指ETF 513100 的 +19.09% 高溢价省下超过 21% 溢价成本），可放心按信号建仓！"
   }
 }
