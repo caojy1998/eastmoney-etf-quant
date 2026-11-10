@@ -3,14 +3,14 @@
     {
       "name": "策略一：全天候“超级固收+” + 东财ATR网格",
       "initial_capital": 59951.83,
-      "final_capital": 86015.04,
-      "net_profit": 26063.21,
-      "total_return_pct": 43.47,
-      "cagr_pct": 6.37,
+      "final_capital": 86106.72,
+      "net_profit": 26154.9,
+      "total_return_pct": 43.63,
+      "cagr_pct": 6.39,
       "max_drawdown_pct": -2.36,
       "ann_vol_pct": 2.88,
       "sharpe_ratio": 1.52,
-      "calmar_ratio": 2.7,
+      "calmar_ratio": 2.71,
       "monthly_win_rate_pct": 78.6,
       "yearly_returns_pct": {
         "2021": 6.18,
@@ -18,20 +18,20 @@
         "2023": 6.45,
         "2024": 10.33,
         "2025": 8.93,
-        "2026": 4.01
+        "2026": 4.12
       }
     },
     {
       "name": "策略二：跨市场ETF动量轮动 + 国债避险",
       "initial_capital": 59930.42,
-      "final_capital": 137496.28,
-      "net_profit": 77565.86,
-      "total_return_pct": 129.43,
-      "cagr_pct": 15.27,
+      "final_capital": 139485.56,
+      "net_profit": 79555.14,
+      "total_return_pct": 132.75,
+      "cagr_pct": 15.54,
       "max_drawdown_pct": -15.98,
       "ann_vol_pct": 12.46,
-      "sharpe_ratio": 1.06,
-      "calmar_ratio": 0.96,
+      "sharpe_ratio": 1.09,
+      "calmar_ratio": 0.97,
       "monthly_win_rate_pct": 65.7,
       "yearly_returns_pct": {
         "2021": 5.55,
@@ -39,20 +39,20 @@
         "2023": 12.81,
         "2024": 11.63,
         "2025": 48.15,
-        "2026": 13.74
+        "2026": 15.38
       }
     },
     {
       "name": "推荐组合：50%全天候网格 + 50%动量轮动",
       "initial_capital": 59941.13,
-      "final_capital": 111755.66,
-      "net_profit": 51814.53,
-      "total_return_pct": 86.44,
-      "cagr_pct": 11.25,
+      "final_capital": 112796.14,
+      "net_profit": 52855.02,
+      "total_return_pct": 88.18,
+      "cagr_pct": 11.42,
       "max_drawdown_pct": -9.07,
       "ann_vol_pct": 7.71,
-      "sharpe_ratio": 1.2,
-      "calmar_ratio": 1.24,
+      "sharpe_ratio": 1.22,
+      "calmar_ratio": 1.26,
       "monthly_win_rate_pct": 67.1,
       "yearly_returns_pct": {
         "2021": 5.86,
@@ -60,20 +60,20 @@
         "2023": 9.63,
         "2024": 11.0,
         "2025": 29.25,
-        "2026": 9.78
+        "2026": 10.81
       }
     },
     {
       "name": "基准A：纯十年国债ETF (511260) 持有",
       "initial_capital": 60000.0,
-      "final_capital": 78069.79,
-      "net_profit": 18069.79,
-      "total_return_pct": 30.12,
-      "cagr_pct": 4.61,
+      "final_capital": 78017.03,
+      "net_profit": 18017.03,
+      "total_return_pct": 30.03,
+      "cagr_pct": 4.59,
       "max_drawdown_pct": -2.27,
       "ann_vol_pct": 2.19,
-      "sharpe_ratio": 1.19,
-      "calmar_ratio": 2.03,
+      "sharpe_ratio": 1.18,
+      "calmar_ratio": 2.02,
       "monthly_win_rate_pct": 77.1,
       "yearly_returns_pct": {
         "2021": 5.88,
@@ -81,15 +81,15 @@
         "2023": 4.54,
         "2024": 9.28,
         "2025": 0.36,
-        "2026": 4.23
+        "2026": 4.16
       }
     },
     {
       "name": "基准B：传统银行固收理财 (2.8%年化)",
       "initial_capital": 60000.0,
-      "final_capital": 70150.74,
-      "net_profit": 10150.74,
-      "total_return_pct": 16.92,
+      "final_capital": 70158.49,
+      "net_profit": 10158.49,
+      "total_return_pct": 16.93,
       "cagr_pct": 2.71,
       "max_drawdown_pct": 0.0,
       "ann_vol_pct": 0.0,
@@ -102,18 +102,18 @@
         "2023": 2.71,
         "2024": 2.71,
         "2025": 2.72,
-        "2026": 2.28
+        "2026": 2.29
       }
     },
     {
       "name": "基准C：沪深300ETF (510300) 买入死拿",
       "initial_capital": 60000.0,
-      "final_capital": 51302.91,
-      "net_profit": -8697.09,
-      "total_return_pct": -14.5,
-      "cagr_pct": -2.64,
+      "final_capital": 51228.58,
+      "net_profit": -8771.42,
+      "total_return_pct": -14.62,
+      "cagr_pct": -2.67,
       "max_drawdown_pct": -44.75,
-      "ann_vol_pct": 19.27,
+      "ann_vol_pct": 19.26,
       "sharpe_ratio": -0.24,
       "calmar_ratio": -0.06,
       "monthly_win_rate_pct": 51.4,
@@ -123,7 +123,7 @@
         "2023": -10.43,
         "2024": 18.39,
         "2025": 21.49,
-        "2026": -10.56
+        "2026": -10.69
       }
     }
   ],
@@ -295,7 +295,7 @@
         "513030": 0.5
       },
       "turnover": 1.0,
-      "nav": 137496.28
+      "nav": 137764.05
     }
   ]
 }

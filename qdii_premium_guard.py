@@ -20,7 +20,8 @@ GLOBAL_ETF_POOL = [
     {"code": "513100", "name": "国泰纳指ETF(高溢价对照)", "secid": "1.513100", "gt_sym": "sh513100"},
 ]
 
-MAX_BUY_PREMIUM_PCT = 2.50   # 买入熔断线：溢价率超过 2.5% 严禁新建仓/追高
+MAX_BUY_PREMIUM_PCT = 2.80   # 空仓新建仓熔断线：溢价率超过 2.8% 严禁新建仓/追高
+MAX_HOLD_PREMIUM_PCT = 5.50  # 已持仓止盈熔断线：考虑欧股16:00开盘导致的日内IOPV滞后，已持仓时溢价率<=5.5%免于清仓折腾
 
 
 def fetch_nasdaq_premiums_live() -> list[dict]:
@@ -66,25 +67,43 @@ def fetch_nasdaq_premiums_live() -> list[dict]:
     raise RuntimeError("未找到跨境ETF实时溢价率数据，请先运行 fetch_eastmoney_data.py 拉取最新行情。")
 
 
-def evaluate_global_allocation(raw_weight: float) -> dict:
+def evaluate_global_allocation(raw_weight: float, is_holding: bool = False) -> dict:
     """
-    检验主力跨境品种【513030 德国ETF】的实时溢价率是否处于安全区间 (<= 2.5%)
+    检验主力跨境品种【513030 德国ETF】的实时溢价率是否处于安全区间：
+      - 空仓新买时：溢价率 <= 2.8% 允许建仓；
+      - 已持仓时（含欧股未开盘导致的A股日内IOPV滞后）：溢价率 <= 5.5% 继续安心持有，避免假性溢价频繁清仓磨损。
     """
     candidates = fetch_nasdaq_premiums_live()
     p513030 = next((x for x in candidates if x["code"] == "513030"), candidates[0])
     p513100 = next((x for x in candidates if x["code"] == "513100"), candidates[-1])
 
-    if p513030["premium_pct"] > MAX_BUY_PREMIUM_PCT:
+    threshold = MAX_HOLD_PREMIUM_PCT if is_holding else MAX_BUY_PREMIUM_PCT
+
+    if p513030["premium_pct"] > threshold:
         return {
-            "status": "🚨 高溢价熔断保护（禁止买入）",
+            "status": "🚨 高溢价熔断保护（禁止买入/清仓避险）",
             "allow_buy": False,
             "adjusted_weight": 0.0,
             "redirect_to_bond_weight": raw_weight,
             "target_etf": p513030,
             "all_candidates": candidates,
             "advice": (
-                f"🚨 触发高溢价熔断！513030 德国ETF 当前实时溢价率达 +{p513030['premium_pct']:.2f}% > {MAX_BUY_PREMIUM_PCT}% 熔断线，"
-                f"程序已自动将其买入仓位清零，转入【511260 十年国债ETF】避险！"
+                f"🚨 触发高溢价熔断！513030 德国ETF 当前实时溢价率达 +{p513030['premium_pct']:.2f}% > {threshold}% 熔断线，"
+                f"程序已自动将其仓位清零，转入【511260 十年国债ETF】避险！"
+            ),
+        }
+
+    if is_holding and p513030["premium_pct"] > MAX_BUY_PREMIUM_PCT:
+        return {
+            "status": "🟡 持仓缓冲保护（日内IOPV滞后·继续持有）",
+            "allow_buy": True,
+            "adjusted_weight": raw_weight,
+            "redirect_to_bond_weight": 0.0,
+            "target_etf": p513030,
+            "all_candidates": candidates,
+            "advice": (
+                f"🟡 海外主力【513030 德国ETF】今日上涨至 {p513030['price']:.3f}（日内静态IOPV {p513030['iopv']:.4f}，表观溢价 +{p513030['premium_pct']:.2f}%）。"
+                f"因欧洲股市16:00后才开盘，日内IOPV存在跨时区滞后；您目前已持有底仓且未超 {MAX_HOLD_PREMIUM_PCT}% 持仓极限线，继续安心持有，免除无效换仓磨损！"
             ),
         }
 
@@ -97,7 +116,7 @@ def evaluate_global_allocation(raw_weight: float) -> dict:
         "all_candidates": candidates,
         "advice": (
             f"✅ 海外主力【513030 德国ETF】当前场内现价 {p513030['price']:.3f} vs 官方实时IOPV {p513030['iopv']:.4f}，"
-            f"实时溢价率仅 {p513030['premium_pct']:+.2f}%（远低于 {MAX_BUY_PREMIUM_PCT}% 熔断线，对比纳指ETF 513100 的 "
-            f"{p513100['premium_pct']:+.2f}% 高溢价省下超过 21% 溢价成本），可放心按信号建仓！"
+            f"实时溢价率仅 {p513030['premium_pct']:+.2f}%（低于 {MAX_BUY_PREMIUM_PCT}% 建仓线，对比纳指ETF 513100 的 "
+            f"{p513100['premium_pct']:+.2f}% 高溢价省下超过 15% 溢价成本），可放心按信号建仓/持有！"
         ),
     }

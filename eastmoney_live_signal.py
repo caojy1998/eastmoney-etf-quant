@@ -129,18 +129,7 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
     # ---------------------------------------------------------
     # 3. 合成二合一权重并执行跨境 ETF 实时溢价率风控检验
     # ---------------------------------------------------------
-    weights_combo = {}
-    for c in close_df.columns:
-        weights_combo[c] = 0.5 * weights_s1.get(c, 0.0) + 0.5 * weights_s2.get(c, 0.0)
-
-    nasdaq_guard = evaluate_global_allocation(weights_combo.get("513030", 0.0))
-    if not nasdaq_guard["allow_buy"]:
-        for w_map in (weights_s1, weights_s2, weights_combo):
-            w_rel = w_map.get("513030", 0.0)
-            w_map["513030"] = 0.0
-            w_map["511260"] = w_map.get("511260", 0.0) + w_rel
-
-    # 先读取用户当前东方财富实盘持仓与预算 (my_holdings.json)，确保后续网格与下单表均使用最新预算
+    # 先读取用户当前东方财富实盘持仓与预算 (my_holdings.json)，确保后续溢价率缓冲、网格与下单表均使用最新持仓与预算
     holdings_path = Path(__file__).parent / "my_holdings.json"
     current_pos = {}
     if holdings_path.exists():
@@ -152,6 +141,20 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
                     total_capital = float(h_data["total_budget"])
         except Exception:
             current_pos = {}
+
+    weights_combo = {}
+    for c in close_df.columns:
+        weights_combo[c] = 0.5 * weights_s1.get(c, 0.0) + 0.5 * weights_s2.get(c, 0.0)
+
+    nasdaq_guard = evaluate_global_allocation(
+        weights_combo.get("513030", 0.0),
+        is_holding=(current_pos.get("513030", 0) > 0),
+    )
+    if not nasdaq_guard["allow_buy"]:
+        for w_map in (weights_s1, weights_s2, weights_combo):
+            w_rel = w_map.get("513030", 0.0)
+            w_map["513030"] = 0.0
+            w_map["511260"] = w_map.get("511260", 0.0) + w_rel
 
     # 生成东方财富 APP 网格条件单参数（专门针对【万1.5 + 不免5(单笔最低5元)】账户定制：大步长 >=2.2% + 单格随本金按比例放大）
     grid_configs = []
@@ -308,9 +311,9 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
 
     order_priority = {"🔴 第一步：卖出减仓": 0, "🟢 第二步：买入加仓": 1, "⚪ 微调免操作(防手续费磨损)": 2, "⚪ 保持不动": 3}
 
-    # 防呆校验：若因某只ETF“微调免卖出”而另一只ETF“买入加仓”导致调仓后总市值超出 (1 - 0.06) 上限，
+    # 防呆校验：若因某只ETF“微调免卖出”而另一只ETF“买入加仓”导致调仓后总市值超出 (1 - 0.035) 上限，
     # 自动恢复被免除的卖出项，确保用户永远有充足现金执行买入
-    max_post_spend = total_capital * (1.0 - 0.06)
+    max_post_spend = total_capital * (1.0 - 0.035)
     post_used_cash = round(
         sum(post_rebalance_positions[c] * float(raw_close_df.loc[latest_dt, c]) for c in all_codes), 1
     )
