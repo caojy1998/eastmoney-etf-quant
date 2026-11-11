@@ -1,9 +1,9 @@
 """
-东方财富 5万元本金 实盘挂单指令与「网格条件单」参数生成器 (已升级为 513030 德国ETF 版本)
-根据最新收盘行情自动输出：
-  1. 策略一（全天候固收+ & 东财ATR网格）：各ETF精确买入股数（100股整数倍）+ 东财APP网格条件单参数
-  2. 策略二（跨市场ETF动量轮动）：实时动量打分排名与当前调仓信号
-  3. 二合一（50%策略一 + 50%策略二）：5万元合并实盘一键下单表与【先卖后买】差额执行表
+东方财富 6万元本金 实盘挂单指令生成器 (v2.0 严格零注水实盘同源版)
+与 backtest_engine.py 100% 共享同一套权重引擎、多周期动量打分、Top-3 排名缓冲、双债利率保护与整手分配器：
+  1. 策略一（全天候“超级固收+”低波底座）：风险平价 + 双均线减仓 + 511260/511360 双债利率保护伞
+  2. 策略二（跨资产多维动量轮动）：6大零溢价资产 (含 159915 创业板ETF & 159980 有色ETF) 10/20/30日 OLS×R² + Top-3 缓冲防换手
+  3. 推荐组合（40%全天候底座 + 60%跨资产动量）：取消盘中负收益网格，资金利用率提升至 ~98.5%，输出【先卖后买】差额执行表
 """
 import json
 import sys
@@ -11,271 +11,172 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from backtest_engine import calc_ols_momentum_r2, load_aligned_data
+from backtest_engine import (
+    ALL_TRADABLE_CODES,
+    COMBO_S1_WEIGHT,
+    COMBO_S2_WEIGHT,
+    MIN_REBALANCE_RATIO,
+    RESERVE_CASH_RATIO,
+    RISK_UNIVERSE,
+    allocate_integer_lots,
+    compute_s1_weights,
+    compute_s2_weights,
+    load_aligned_data,
+    select_safe_bond,
+)
 from fetch_eastmoney_data import ETF_UNIVERSE
 from qdii_premium_guard import evaluate_global_allocation
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-OUTPUT_DIR = Path(__file__).parent / "output"
+BASE_DIR = Path(__file__).parent
+OUTPUT_DIR = BASE_DIR / "output"
+HOLDINGS_PATH = BASE_DIR / "my_holdings.json"
+
+
+def build_order_sheet_from_weights(
+    weights_map: dict[str, float],
+    raw_px_row: pd.Series,
+    capital: float,
+    reserve_ratio: float = RESERVE_CASH_RATIO,
+) -> list[dict]:
+    tgt_shares_map = allocate_integer_lots(
+        weights_map, raw_px_row, capital, all_codes=ALL_TRADABLE_CODES, reserve_ratio=reserve_ratio
+    )
+    orders = []
+    for c, w in sorted(weights_map.items(), key=lambda x: x[1], reverse=True):
+        sh = tgt_shares_map.get(c, 0)
+        if w <= 0.005 and sh == 0:
+            continue
+        raw_px = float(raw_px_row[c])
+        lots = sh // 100
+        orders.append({
+            "code": c,
+            "name": ETF_UNIVERSE[c]["name"],
+            "latest_price": round(raw_px, 3),
+            "target_weight_pct": round(w * 100.0, 1),
+            "target_amt": round(capital * w, 0),
+            "suggest_shares": sh,
+            "suggest_lots": lots,
+            "actual_amt": round(sh * raw_px, 2),
+            "note": ETF_UNIVERSE[c]["desc"],
+        })
+    return orders
 
 
 def generate_live_signals(total_capital: float = 60000.0) -> dict:
-    data = load_aligned_data(start_date="2020-09-01")
-    close_df = data["close"]
-    high_df = data["high"]
-    low_df = data["low"]
-    raw_close_df = data["raw_close"]
-
-    latest_dt = close_df.index[-1]
-    ret_df = close_df.pct_change().fillna(0.0)
-    vol20 = (ret_df.rolling(20).std() * np.sqrt(250)).iloc[-1]
-    ma20 = close_df.rolling(20).mean().iloc[-1]
-    ma60 = close_df.rolling(60).mean().iloc[-1]
-
-    # 计算实盘日内真实波幅 ATR% (用于东方财富网格条件单)
-    intraday_range = (high_df - low_df) / close_df.shift(1).bfill()
-    atr20_pct = intraday_range.rolling(20).mean().iloc[-1]
-
-    # ---------------------------------------------------------
-    # 1. 计算【策略一：全天候“超级固收+”】最新目标权重
-    # ---------------------------------------------------------
-    base_risk_budget = {
-        "511260": 0.42,
-        "511380": 0.16,
-        "512890": 0.17,
-        "518880": 0.15,
-        "513030": 0.10,
-    }
-    raw_scores = {}
-    released_to_bond = 0.0
-
-    for c, budget in base_risk_budget.items():
-        v = float(vol20[c]) if not np.isnan(vol20[c]) and vol20[c] > 0.005 else 0.05
-        inv_vol_factor = min(2.2, max(0.4, 0.10 / v))
-        w_target = budget * inv_vol_factor
-        px = float(close_df.loc[latest_dt, c])
-        if c != "511260":
-            if px < float(ma60[c]) and px < float(ma20[c]):
-                released_to_bond += w_target * 0.55
-                w_target *= 0.45
-        raw_scores[c] = w_target
-
-    raw_scores["511260"] += released_to_bond
-    total_s = sum(raw_scores.values())
-    weights_s1 = {c: raw_scores[c] / total_s for c in base_risk_budget}
-    if weights_s1["511260"] < 0.35:
-        diff = 0.35 - weights_s1["511260"]
-        other_sum = 1.0 - weights_s1["511260"]
-        for c in weights_s1:
-            if c != "511260":
-                weights_s1[c] -= diff * (weights_s1[c] / other_sum)
-        weights_s1["511260"] = 0.35
-
-    # ---------------------------------------------------------
-    # 2. 计算【策略二：跨市场 ETF 动量轮动】最新打分与信号
-    # ---------------------------------------------------------
-    log_close = np.log(close_df)
-    risk_universe = ["512890", "511380", "518880", "513030", "510500"]
-    safe_haven = "511260"
-
-    momentum_board = []
-    qualified_scores = {}
-
-    for c in risk_universe:
-        w20 = log_close[c].iloc[-21:].values
-        w10 = log_close[c].iloc[-11:].values
-        s20 = calc_ols_momentum_r2(w20)
-        s10 = calc_ols_momentum_r2(w10)
-        combo_score = 0.65 * s20 + 0.35 * s10
-
-        px = float(close_df.loc[latest_dt, c])
-        m20_val = float(ma20[c])
-        v20_val = float(vol20[c])
-        ret_5d = float(close_df[c].iloc[-1] / close_df[c].iloc[-6] - 1.0)
-        ret_20d = float(close_df[c].iloc[-1] / close_df[c].iloc[-21] - 1.0)
-
-        passed = (combo_score > 0.02) and (px >= m20_val) and (ret_5d > -0.038) and (v20_val < 0.32)
-        risk_adj_score = combo_score / max(0.08, v20_val) if passed else -999.0
-        if passed:
-            qualified_scores[c] = risk_adj_score
-
-        momentum_board.append({
-            "code": c,
-            "name": ETF_UNIVERSE[c]["name"],
-            "raw_price": round(float(raw_close_df.loc[latest_dt, c]), 3),
-            "ret_20d_pct": round(ret_20d * 100, 2),
-            "ret_5d_pct": round(ret_5d * 100, 2),
-            "vol_20d_pct": round(v20_val * 100, 2),
-            "above_ma20": "是" if px >= m20_val else "否(破位)",
-            "momentum_r2_score": round(combo_score, 3),
-            "passed_filter": "✅ 入选" if passed else "🛡️ 避险剔除",
-        })
-
-    momentum_board.sort(key=lambda x: x["momentum_r2_score"], reverse=True)
-    ranked_q = sorted(qualified_scores.items(), key=lambda x: x[1], reverse=True)
-
-    weights_s2 = {c: 0.0 for c in close_df.columns}
-    if len(ranked_q) >= 2:
-        weights_s2[ranked_q[0][0]] = 0.50
-        weights_s2[ranked_q[1][0]] = 0.50
-    elif len(ranked_q) == 1:
-        weights_s2[ranked_q[0][0]] = 0.50
-        weights_s2[safe_haven] = 0.50
-    else:
-        weights_s2[safe_haven] = 1.00
-
-    # ---------------------------------------------------------
-    # 3. 合成二合一权重并执行跨境 ETF 实时溢价率风控检验
-    # ---------------------------------------------------------
-    # 先读取用户当前东方财富实盘持仓与预算 (my_holdings.json)，确保后续溢价率缓冲、网格与下单表均使用最新持仓与预算
-    holdings_path = Path(__file__).parent / "my_holdings.json"
-    current_pos = {}
-    if holdings_path.exists():
+    # 1. 先读取用户当前东方财富实盘持仓与预算 (my_holdings.json)
+    current_pos: dict[str, int] = {}
+    last_sync_date = ""
+    if HOLDINGS_PATH.exists():
         try:
-            with open(holdings_path, "r", encoding="utf-8") as hf:
+            with open(HOLDINGS_PATH, "r", encoding="utf-8") as hf:
                 h_data = json.load(hf)
                 current_pos = {k: int(v) for k, v in h_data.get("positions", {}).items()}
+                last_sync_date = str(h_data.get("last_sync_date", ""))
                 if "total_budget" in h_data and float(h_data["total_budget"]) >= 10000.0:
                     total_capital = float(h_data["total_budget"])
         except Exception:
             current_pos = {}
 
-    weights_combo = {}
-    for c in close_df.columns:
-        weights_combo[c] = 0.5 * weights_s1.get(c, 0.0) + 0.5 * weights_s2.get(c, 0.0)
+    data = load_aligned_data(start_date="2020-09-01")
+    close_df = data["close"]
+    raw_close_df = data["raw_close"]
 
-    nasdaq_guard = evaluate_global_allocation(
-        weights_combo.get("513030", 0.0),
-        is_holding=(current_pos.get("513030", 0) > 0),
+    idx_last = len(close_df) - 1
+    latest_dt = close_df.index[idx_last]
+    latest_raw_px = raw_close_df.iloc[idx_last]
+
+    ret_df = close_df.pct_change().fillna(0.0)
+    log_close = np.log(close_df)
+    vol20_df = ret_df.rolling(20, min_periods=10).std() * np.sqrt(250)
+    ma20_df = close_df.rolling(20, min_periods=10).mean()
+    ma60_df = close_df.rolling(60, min_periods=20).mean()
+
+    # 2. 双债利率风险保护伞检测 (511260 十年国债 vs 511360 短融ETF)
+    safe_bond, bond_guard_info = select_safe_bond(close_df, ma60_df, idx_last)
+
+    # 3. 计算【策略一：全天候“超级固收+”低波底座】最新目标权重
+    weights_s1 = compute_s1_weights(close_df, vol20_df, ma20_df, ma60_df, idx_last, safe_bond)
+
+    # 4. 识别用户实盘当前持有的动量主力仓位（市值 >= 总资金14% 视为已持有主力腿，启用 Top-3 排名缓冲防换手）
+    live_prev_top = []
+    if sum(current_pos.values()) > 0:
+        heavy_candidates = []
+        for c in RISK_UNIVERSE:
+            mkt_v = current_pos.get(c, 0) * float(latest_raw_px[c])
+            if mkt_v >= total_capital * 0.14:
+                heavy_candidates.append((c, mkt_v))
+        heavy_candidates.sort(key=lambda x: x[1], reverse=True)
+        live_prev_top = [c for c, _ in heavy_candidates[:2]]
+
+    # 5. 计算【策略二：跨资产多维动量轮动】最新打分看板与目标权重
+    weights_s2, chosen_top2, raw_board = compute_s2_weights(
+        close_df,
+        log_close,
+        vol20_df,
+        ma20_df,
+        idx_last,
+        safe_bond,
+        prev_top=live_prev_top,
+        rank_buffer=1,
     )
-    if not nasdaq_guard["allow_buy"]:
-        for w_map in (weights_s1, weights_s2, weights_combo):
-            w_rel = w_map.get("513030", 0.0)
-            w_map["513030"] = 0.0
-            w_map["511260"] = w_map.get("511260", 0.0) + w_rel
 
-    # 生成东方财富 APP 网格条件单参数（专门针对【万1.5 + 不免5(单笔最低5元)】账户定制：大步长 >=2.2% + 单格随本金按比例放大）
-    grid_configs = []
-    single_grid_target = max(2800.0, total_capital * 0.056)
-    for gc in ["512890", "513030", "511380", "518880"]:
-        raw_px = float(raw_close_df.loc[latest_dt, gc])
-        # 不免5账户专享步长：放大至 >= 2.20%，确保单格毛利 > 60元，扣除买5元+卖5元=10元佣金后仍净赚 50元+
-        step_pct = round(max(2.20, min(3.20, float(atr20_pct[gc]) * 100 * 1.45)), 2)
-        lower_px = round(raw_px * (1.0 - step_pct * 3.5 / 100.0), 3)
-        upper_px = round(raw_px * (1.0 + step_pct * 4.0 / 100.0), 3)
-        alloc_amt = total_capital * weights_combo.get(gc, 0.0)
-        lot_value = raw_px * 100.0
-        # 仅对持仓金额 >= 本金16% (5万对应8,000元) 的主力品种开启大步长网格
-        if alloc_amt >= total_capital * 0.16:
-            grid_lots = max(1, round(single_grid_target / lot_value))
-            shares_g = int(grid_lots * 100)
-            amt_g = round(grid_lots * lot_value, 1)
-            gross_profit = round(amt_g * (step_pct / 100.0), 1)
-            net_profit_min5 = round(gross_profit - 10.0, 1)
-            grid_note = f"✅ 不免5定制大网格：单格毛利¥{gross_profit}，扣10元佣金后【净赚¥{net_profit_min5}/次】"
-        else:
-            grid_lots = 1
-            shares_g = 100
-            amt_g = round(lot_value, 1)
-            gross_profit = round(amt_g * (step_pct / 100.0), 1)
-            grid_note = "⏸️ 当前仅底仓观察，不开网格（避免5元最低佣金磨损）"
-        grid_configs.append({
-            "code": gc,
-            "name": ETF_UNIVERSE[gc]["name"],
-            "base_price": round(raw_px, 3),
-            "step_up_sell_pct": f"+{step_pct:.2f}%",
-            "step_down_buy_pct": f"-{step_pct:.2f}%",
-            "price_range": f"{lower_px:.3f} ~ {upper_px:.3f}",
-            "shares_per_grid": shares_g,
-            "est_amount_per_grid": amt_g,
-            "est_gross_profit": gross_profit,
-            "status_note": grid_note,
+    momentum_board = []
+    for row in raw_board:
+        c = row["code"]
+        momentum_board.append({
+            "code": c,
+            "name": ETF_UNIVERSE[c]["name"],
+            "raw_price": round(float(latest_raw_px[c]), 3),
+            "ret_20d_pct": row["ret_20d_pct"],
+            "ret_5d_pct": row["ret_5d_pct"],
+            "vol_20d_pct": row["vol_20d_pct"],
+            "above_ma20": row["above_ma20"],
+            "score_10_20_30": f"{row['score_10d']:+.2f} / {row['score_20d']:+.2f} / {row['score_30d']:+.2f}",
+            "momentum_r2_score": row["momentum_r2_score"],
+            "risk_adj_score": row["risk_adj_score"] if row["risk_adj_score"] is not None else -999.0,
+            "passed_filter": row["status_label"],
         })
 
-    def build_order_sheet(weights_map: dict, capital: float, min_reserve_ratio: float = 0.055) -> list[dict]:
-        """
-        两阶段智能整手分配算法（目标仓位利用率 ~94.5%，仅留 1 格网格低吸备用金 ~5.5%）：
-        1. 第一阶段：先确定高面值国债 ETF (511260，1手≈1.36万元) 的整手数；
-        2. 第二阶段：将扣除 511260 后的剩余可投资金 (investable_cap - actual_511260)，
-           按权重比例精准分配给其余小面值 ETF (512890/513030/511380/518880，1手仅120~1270元)，
-           彻底消除因 511260 整手跨度大而造成的数千元资金闲置！
-        """
-        investable_cap = capital * (1.0 - min_reserve_ratio)
-        w_bond = weights_map.get("511260", 0.0)
-        px_bond = float(raw_close_df.loc[latest_dt, "511260"])
-        lot_bond = px_bond * 100.0
+    # 6. 合成二合一权重 (40% 全天候底座 + 60% 跨资产动量) 并执行实时 IOPV 折溢价防雷检验
+    weights_combo = {
+        c: COMBO_S1_WEIGHT * weights_s1.get(c, 0.0) + COMBO_S2_WEIGHT * weights_s2.get(c, 0.0)
+        for c in ALL_TRADABLE_CODES
+    }
 
-        lots_map = {}
-        if w_bond > 0.005:
-            lots_b = int(round((investable_cap * w_bond) / lot_bond))
-            while lots_b * lot_bond > investable_cap and lots_b > 0:
-                lots_b -= 1
-            lots_map["511260"] = lots_b
-            amt_bond = lots_b * lot_bond
-        else:
-            amt_bond = 0.0
+    premium_guard = evaluate_global_allocation(
+        weights_combo.get("513030", 0.0),
+        is_holding=(current_pos.get("513030", 0) > 0),
+        holdings_map=current_pos,
+    )
+    for blocked_code in premium_guard.get("blocked_codes", []):
+        for w_map in (weights_s1, weights_s2, weights_combo):
+            w_rel = w_map.get(blocked_code, 0.0)
+            if w_rel > 0:
+                w_map[blocked_code] = 0.0
+                w_map[safe_bond] = w_map.get(safe_bond, 0.0) + w_rel
 
-        rem_investable = max(0.0, investable_cap - amt_bond)
-        other_codes = [c for c, w in weights_map.items() if c != "511260" and w > 0.005]
-        other_w_sum = sum(weights_map[c] for c in other_codes)
+    # 7. 生成整手目标持仓与【先卖后买】差额执行清单
+    combo_orders = build_order_sheet_from_weights(weights_combo, latest_raw_px, total_capital, reserve_ratio=RESERVE_CASH_RATIO)
+    s1_orders = build_order_sheet_from_weights(weights_s1, latest_raw_px, total_capital, reserve_ratio=RESERVE_CASH_RATIO)
+    s2_orders = build_order_sheet_from_weights(weights_s2, latest_raw_px, total_capital, reserve_ratio=RESERVE_CASH_RATIO)
 
-        for c in other_codes:
-            raw_px = float(raw_close_df.loc[latest_dt, c])
-            lot_cost = raw_px * 100.0
-            alloc_target = rem_investable * (weights_map[c] / other_w_sum) if other_w_sum > 0 else 0.0
-            lots = int(round(alloc_target / lot_cost))
-            if lots == 0 and (capital * weights_map[c]) >= lot_cost * 0.55 and rem_investable >= lot_cost:
-                lots = 1
-            lots_map[c] = lots
-
-        orders = []
-        for c, w in sorted(weights_map.items(), key=lambda x: x[1], reverse=True):
-            if w <= 0.005:
-                continue
-            raw_px = float(raw_close_df.loc[latest_dt, c])
-            lots = lots_map.get(c, 0)
-            orders.append({
-                "code": c,
-                "name": ETF_UNIVERSE[c]["name"],
-                "latest_price": round(raw_px, 3),
-                "target_weight_pct": round(w * 100, 1),
-                "target_amt": round(capital * w, 0),
-                "suggest_shares": lots * 100,
-                "suggest_lots": lots,
-                "actual_amt": round(lots * 100 * raw_px, 2),
-                "note": ETF_UNIVERSE[c]["desc"],
-            })
-
-        # 防超支微调：若四舍五入后略超 investable_cap，从持仓最大的小面值品种减 1 手
-        total_spend = sum(item["actual_amt"] for item in orders)
-        while total_spend > capital * (1.0 - 0.04):
-            candidates = [x for x in orders if x["code"] != "511260" and x["suggest_lots"] >= 1]
-            if not candidates:
-                break
-            target_item = max(candidates, key=lambda x: x["actual_amt"])
-            target_item["suggest_lots"] -= 1
-            target_item["suggest_shares"] = target_item["suggest_lots"] * 100
-            target_item["actual_amt"] = round(target_item["suggest_shares"] * target_item["latest_price"], 2)
-            total_spend = sum(item["actual_amt"] for item in orders)
-
-        return orders
-
-    combo_orders = build_order_sheet(weights_combo, total_capital, min_reserve_ratio=0.055)
-
-    all_codes = ["511260", "513030", "512890", "511380", "518880", "510500"]
+    all_check_codes = list(dict.fromkeys(ALL_TRADABLE_CODES + list(current_pos.keys())))
     target_map = {item["code"]: item["suggest_shares"] for item in combo_orders}
     is_initial_build = sum(current_pos.values()) == 0
-    MIN_REBALANCE_AMT = round(total_capital * 0.036, 0)  # 按总本金的 3.6% 设定防磨损阈值（5万为1800元，6万为2160元，10万为3600元）
+    MIN_REBALANCE_AMT = round(total_capital * MIN_REBALANCE_RATIO, 0)  # 6万元对应 2,400 元防磨损锁
 
     action_steps = []
     post_rebalance_positions = {}
-    for c in all_codes:
-        cur_sh = current_pos.get(c, 0)
-        tgt_sh = target_map.get(c, 0)
+    for c in all_check_codes:
+        if c not in raw_close_df.columns:
+            continue
+        cur_sh = int(current_pos.get(c, 0))
+        tgt_sh = int(target_map.get(c, 0))
         diff_sh = tgt_sh - cur_sh
-        raw_px = float(raw_close_df.loc[latest_dt, c])
+        raw_px = float(latest_raw_px[c])
         diff_amt = round(abs(diff_sh) * raw_px, 1)
 
         if diff_sh == 0:
@@ -285,7 +186,7 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
             action = "⚪ 微调免操作(防手续费磨损)"
             diff_sh = 0
             diff_amt = 0.0
-            post_sh = cur_sh  # 触发防磨损免操作锁时，实盘不交易，同步后的实际持仓保持原股数不变
+            post_sh = cur_sh
         elif diff_sh < 0:
             action = "🔴 第一步：卖出减仓"
             post_sh = tgt_sh
@@ -299,7 +200,7 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
             action_steps.append({
                 "action": action,
                 "code": c,
-                "name": ETF_UNIVERSE[c]["name"],
+                "name": ETF_UNIVERSE.get(c, {}).get("name", c),
                 "latest_price": round(raw_px, 3),
                 "current_shares": cur_sh,
                 "target_shares": post_sh,
@@ -309,20 +210,17 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
                 "est_cash_flow": diff_amt,
             })
 
-    order_priority = {"🔴 第一步：卖出减仓": 0, "🟢 第二步：买入加仓": 1, "⚪ 微调免操作(防手续费磨损)": 2, "⚪ 保持不动": 3}
-
-    # 防呆校验：若因某只ETF“微调免卖出”而另一只ETF“买入加仓”导致调仓后总市值超出 (1 - 0.035) 上限，
-    # 自动恢复被免除的卖出项，确保用户永远有充足现金执行买入
-    max_post_spend = total_capital * (1.0 - 0.035)
+    # 防超支校验：若因微调免卖出而另一只品种买入加仓导致总持仓市值超过 99% 总预算，自动恢复卖出项以保证现金充足
+    max_post_spend = total_capital * 0.99
     post_used_cash = round(
-        sum(post_rebalance_positions[c] * float(raw_close_df.loc[latest_dt, c]) for c in all_codes), 1
+        sum(post_rebalance_positions[c] * float(latest_raw_px[c]) for c in post_rebalance_positions), 1
     )
     if post_used_cash > max_post_spend:
         for step in action_steps:
             c = step["code"]
             if step["action"] == "⚪ 微调免操作(防手续费磨损)" and step["theoretical_target_shares"] < step["current_shares"]:
                 diff_sh_restore = step["theoretical_target_shares"] - step["current_shares"]
-                raw_px = float(raw_close_df.loc[latest_dt, c])
+                raw_px = float(latest_raw_px[c])
                 step["action"] = "🔴 第一步：卖出减仓"
                 step["target_shares"] = step["theoretical_target_shares"]
                 step["trade_shares"] = abs(diff_sh_restore)
@@ -330,30 +228,101 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
                 step["est_cash_flow"] = round(abs(diff_sh_restore) * raw_px, 1)
                 post_rebalance_positions[c] = int(step["theoretical_target_shares"])
                 post_used_cash = round(
-                    sum(post_rebalance_positions[k] * float(raw_close_df.loc[latest_dt, k]) for k in all_codes), 1
+                    sum(post_rebalance_positions[k] * float(latest_raw_px[k]) for k in post_rebalance_positions), 1
                 )
                 if post_used_cash <= max_post_spend:
                     break
 
+    order_priority = {
+        "🔴 第一步：卖出减仓": 0,
+        "🟢 第二步：买入加仓": 1,
+        "⚪ 微调免操作(防手续费磨损)": 2,
+        "⚪ 保持不动": 3,
+    }
     action_steps.sort(key=lambda x: (order_priority.get(x["action"], 9), -x["est_cash_flow"]))
 
     used_combo_cash = post_used_cash
     reserve_cash = round(total_capital - used_combo_cash, 1)
 
+    # 8. 调仓窗口识别与防误操作提示（周五 vs 周中预览）
+    weekday_names = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+    wk_cn = weekday_names[latest_dt.weekday()]
+    is_friday_window = latest_dt.weekday() == 4
+    if is_friday_window:
+        timing_banner = (
+            f"🟢 当前行情基准日 {latest_dt.strftime('%Y-%m-%d')} 为【周五调仓窗口】！"
+            f"建议在周五 14:45~14:55 按下方【先卖后买】顺序执行买卖，成交后双击《确认已完成今日调仓_同步持仓.bat》。"
+        )
+    else:
+        timing_banner = (
+            f"🕒 当前行情基准日 {latest_dt.strftime('%Y-%m-%d')} 为【{wk_cn}（非周五调仓日）】—— 下方差额单仅供盘后预览！"
+            f"请严格等到【本周五 14:45】重新运行脚本后再执行实盘买卖，周中切勿提前调仓（防假突破打脸与5元最低佣金磨损）。"
+        )
+
+    # 9. 四大实盘风控与防磨损保护状态说明（替代原负收益盘中网格表）
+    protection_status = [
+        {
+            "module": "① 盘中网格条件单管控",
+            "state": "🚫 已全面停用（实测提效 +1.36%/年）",
+            "detail": (
+                "严格路径回测证实：在动量趋势组合上叠加盘中网格会过早卖飞主升浪牛股、下跌破位前逆势接刀，且占用 5.5% 闲置现金。"
+                "请在东财APP【条件单 -> 我的条件单】中暂停/删除此前设置的网格单，释放资金吃满趋势复利！"
+            ),
+        },
+        {
+            "module": "② 双债利率风险保护伞",
+            "state": (
+                f"🛡️ 已切入 511360 短融避险"
+                if bond_guard_info["switched_to_short_bond"]
+                else f"✅ 511260 十年国债稳健持有 (20日 {bond_guard_info['bond_511260_ret20_pct']:+.2f}%)"
+            ),
+            "detail": (
+                "实时监控 511260 十年国债：当跌破 60 日均线且 20 日跌幅超 -0.30%（债熊/加息冲击）时，自动将固收底仓平移至 511360 短融ETF。"
+            ),
+        },
+        {
+            "module": "③ Top-3 排名迟滞缓冲锁",
+            "state": f"🔒 当前识别主力持仓: {', '.join(live_prev_top) if live_prev_top else '空仓/新建仓'}",
+            "detail": (
+                "已持有的策略二主力 ETF 只要仍居合格池前 3 名且站稳 20 日均线，即使第 2、3 名小幅互换也按兵不动，避免数万元无效换仓。"
+            ),
+        },
+        {
+            "module": "④ 不免5防微调锁 & 零钱增值",
+            "state": f"💰 免操作阈值 ¥{MIN_REBALANCE_AMT:,.0f} ｜ 预留零钱 ¥{reserve_cash:,.0f}",
+            "detail": (
+                f"单品种调仓差额低于总本金 {MIN_REBALANCE_RATIO*100:.1f}% (¥{MIN_REBALANCE_AMT:,.0f}) 自动跳过免交 5 元最低佣金；"
+                f"账面剩余约 ¥{reserve_cash:,.0f} 零钱可在东财收盘前顺手参与 1 天期国债逆回购 (GC001/R-001)。"
+            ),
+        },
+    ]
+
+    s1_pct = int(round(COMBO_S1_WEIGHT * 100))
+    s2_pct = int(round(COMBO_S2_WEIGHT * 100))
+
     result = {
         "as_of_date": latest_dt.strftime("%Y-%m-%d"),
+        "as_of_weekday": wk_cn,
+        "is_friday_rebalance_window": is_friday_window,
+        "timing_banner": timing_banner,
+        "last_sync_date": last_sync_date,
         "generated_at": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
         "total_capital": total_capital,
+        "combo_ratio_label": f"{s1_pct}%全天候固收底座 + {s2_pct}%跨资产动量轮动",
         "used_combo_cash": used_combo_cash,
         "reserve_cash": reserve_cash,
-        "strategy1_orders": build_order_sheet(weights_s1, total_capital),
-        "strategy1_grid_params": grid_configs,
+        "min_rebalance_amt": MIN_REBALANCE_AMT,
+        "bond_guard_info": bond_guard_info,
+        "live_prev_top": live_prev_top,
+        "chosen_top2": chosen_top2,
+        "strategy1_orders": s1_orders,
         "strategy2_momentum_board": momentum_board,
-        "strategy2_orders": build_order_sheet(weights_s2, total_capital),
+        "strategy2_orders": s2_orders,
         "combo_orders": combo_orders,
         "combo_action_steps": action_steps,
         "post_rebalance_positions": post_rebalance_positions,
-        "nasdaq_premium_guard": nasdaq_guard,
+        "protection_mechanisms": protection_status,
+        "nasdaq_premium_guard": premium_guard,
     }
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -361,18 +330,18 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
     util_pct = used_combo_cash / total_capital * 100.0 if total_capital > 0 else 0.0
-    print("==========================================================================")
-    print(f"📌 东方财富 {total_capital:,.0f} 元实盘调仓指令单 (基准行情日: {result['as_of_date']} | 海外核心: 513030 德国ETF)")
-    print("==========================================================================")
-    print(f"\n【方案 C（推荐二合一）：50%全天候网格 + 50%动量轮动 {total_capital/10000:.1f}万元一键下单表】")
-    print(pd.DataFrame(result["combo_orders"])[["code", "name", "latest_price", "target_weight_pct", "suggest_shares", "actual_amt"]].to_string(index=False))
-    print(f"   -> 证券持仓合计: ¥{used_combo_cash:,.1f} 元 (资金利用率 {util_pct:.1f}%) | 预留网格低吸/逆回购备用金: ¥{reserve_cash:,.1f} 元")
+    print("=========================================================================================")
+    print(f"📌 东方财富 {total_capital:,.0f} 元实盘调仓信号单 (基准行情日: {result['as_of_date']} {wk_cn})")
+    print("=========================================================================================")
+    print(f"⚠️  {timing_banner}")
+    print(f"\n【推荐二合一：{result['combo_ratio_label']} | 先卖后买差额执行表】")
+    if action_steps:
+        cols = ["action", "code", "name", "latest_price", "current_shares", "target_shares", "trade_shares", "est_cash_flow"]
+        print(pd.DataFrame(action_steps)[cols].to_string(index=False))
+    print(f"   -> 调仓后证券市值: ¥{used_combo_cash:,.1f} 元 (真实资金利用率 {util_pct:.1f}%) | 账户预留零钱: ¥{reserve_cash:,.1f} 元")
 
-    print("\n【东方财富 APP「网格交易条件单」推荐填入参数】")
-    print(pd.DataFrame(result["strategy1_grid_params"]).to_string(index=False))
-
-    print("\n【跨市场 ETF 动量轮动最新打分榜】")
-    print(pd.DataFrame(result["strategy2_momentum_board"]).to_string(index=False))
+    print("\n【6大跨资产零溢价池 实时多周期动量 (10/20/30日 OLS×R²) 打分榜】")
+    print(pd.DataFrame(momentum_board).to_string(index=False))
 
     return result
 

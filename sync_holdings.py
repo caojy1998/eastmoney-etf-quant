@@ -22,10 +22,20 @@ def sync():
     with open(LIVE_JSON, "r", encoding="utf-8") as f:
         live = json.load(f)
 
-    new_pos = {"511260": 0, "513030": 0, "512890": 0, "511380": 0, "518880": 0, "510500": 0}
+    new_pos = {
+        "511260": 0,
+        "511360": 0,
+        "513030": 0,
+        "512890": 0,
+        "511380": 0,
+        "518880": 0,
+        "159915": 0,
+        "159980": 0,
+        "510500": 0,
+    }
     post_pos = live.get("post_rebalance_positions")
     if post_pos:
-        for code in new_pos:
+        for code in set(new_pos.keys()) | set(post_pos.keys()):
             new_pos[code] = int(post_pos.get(code, 0))
     else:
         for step in live.get("combo_action_steps", []):

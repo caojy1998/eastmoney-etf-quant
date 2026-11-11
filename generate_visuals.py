@@ -1,5 +1,5 @@
 """
-生成 5万元本金 2021~2026 历史回测对比高清图表 (PNG) 与 交互式看板 (HTML)
+生成东方财富 6万元本金 2021~2026 严格实盘级历史回测对比高清图表 (PNG) 与 交互式实盘信号看板 (HTML)
 """
 import json
 import sys
@@ -37,52 +37,47 @@ def render_png_chart():
     dates = nav_df["date"].tolist()
     n = len(dates)
 
-    # 画布尺寸 1800 x 1150 (高清双面板：上方净值曲线，下方回撤曲线)
     W, H = 1800, 1150
-    img = Image.new("RGB", (W, H), (15, 23, 42))  # 深色金融终端背景
+    img = Image.new("RGB", (W, H), (15, 23, 42))
     draw = ImageDraw.Draw(img)
 
     f_title = get_chinese_font(30)
-    f_sub = get_chinese_font(20)
+    f_sub = get_chinese_font(19)
     f_label = get_chinese_font(17)
     f_small = get_chinese_font(15)
 
     init_cap = float(round(nav_df["bench_fixed_income"].iloc[0], -3))
     cap_wan = f"{init_cap/10000:.0f}万" if init_cap % 10000 == 0 else f"{init_cap/10000:.1f}万"
 
-    # 标题
     draw.text(
         (70, 28),
-        f"东方财富 {cap_wan}元本金 场内ETF量化策略 6年真实历史回测对比 (2021.01 ~ 2026.11)",
+        f"东方财富 {cap_wan}元本金 场内ETF量化策略 6年严格实盘级回测对比 (2021.01 ~ 2026.11)",
         fill=(248, 250, 252),
         font=f_title,
     )
     draw.text(
         (70, 70),
-        "含可转债ETF(511380) / 十年国债ETF(511260) / 红利低波ETF(512890) / 黄金ETF(518880) / 德国ETF(513030)  |  已扣除东财佣金与滑点",
+        "国债(511260)/短融(511360)/红利(512890)/可转债(511380)/黄金(518880)/德国(513030)/创业板(159915)/有色(159980) | 100股整手+不免5最低5元+周五调仓",
         fill=(148, 163, 184),
         font=f_sub,
     )
 
-    # 上面板区域：资金曲线 (y: 120 ~ 680)
     left, right = 110, 1390
     top1, bottom1 = 125, 665
     draw.rectangle([left, top1, right, bottom1], outline=(51, 65, 85), width=2)
 
-    # 动态计算 Y 轴上限，防止未来净值增长超出图表顶部
     max_nav_val = float(nav_df.drop(columns=["date"]).max().max())
     y_min = 25000.0
-    y_max = max(122000.0, np.ceil(max_nav_val / 10000.0) * 10000.0 + 2000.0)
+    y_max = max(125000.0, np.ceil(max_nav_val / 10000.0) * 10000.0 + 4000.0)
     for y_val in range(30000, int(y_max) + 1, 10000):
         py = bottom1 - (y_val - y_min) / (y_max - y_min) * (bottom1 - top1)
         color = (71, 85, 105) if y_val == int(init_cap) else (30, 41, 59)
         draw.line([(left, py), (right, py)], fill=color, width=2 if y_val == int(init_cap) else 1)
         draw.text((20, py - 10), f"¥{y_val:,.0f}", fill=(148, 163, 184), font=f_small)
 
-    # 下面板区域：最大回撤曲线 (y: 740 ~ 1060)
     top2, bottom2 = 745, 1060
     draw.rectangle([left, top2, right, bottom2], outline=(51, 65, 85), width=2)
-    draw.text((left + 4, top2 - 28), "▼ 历史动态回撤对比曲线 (Drawdown %，越接近 0% 越稳健)", fill=(203, 213, 225), font=f_label)
+    draw.text((left + 4, top2 - 28), "▼ 历史动态回撤对比曲线 (Drawdown %，含整手零头与5元最低佣金摩擦)", fill=(203, 213, 225), font=f_label)
 
     dd_min, dd_max = -50.0, 0.0
     for dd_val in [0, -5, -10, -20, -30, -40, -50]:
@@ -90,7 +85,6 @@ def render_png_chart():
         draw.line([(left, py), (right, py)], fill=(30, 41, 59), width=1)
         draw.text((35, py - 10), f"{dd_val}%", fill=(148, 163, 184), font=f_small)
 
-    # X轴年份刻度
     seen_years = set()
     for i, d_str in enumerate(dates):
         yr = d_str[:4]
@@ -102,18 +96,17 @@ def render_png_chart():
             draw.text((px - 20, bottom2 + 12), f"{yr}年", fill=(203, 213, 225), font=f_small)
 
     series_cfg = [
-        ("strategy2_momentum", "策略二：跨市场ETF动量轮动+国债避险", (251, 146, 60), 4),
-        ("strategy_combo", "推荐组合：50%全天候网格+50%动量轮动", (56, 189, 248), 4),
-        ("strategy1_all_weather", "策略一：全天候“超级固收+”+东财网格", (52, 211, 153), 4),
+        ("strategy2_momentum", "策略二：跨资产多维动量(整手·不免5)", (251, 146, 60), 4),
+        ("strategy_combo", "推荐组合：40%底座+60%动量(整手·不免5)", (56, 189, 248), 4),
+        ("strategy1_all_weather", "策略一：全天候固收+底座(整手·不免5)", (52, 211, 153), 4),
         ("bench_bond", "基准A：纯十年国债ETF (511260) 持有", (167, 139, 250), 2),
         ("bench_fixed_income", "基准B：传统银行固收理财 (2.8%年化)", (226, 232, 240), 2),
         ("bench_hs300", "基准C：沪深300ETF (510300) 买入死拿", (248, 113, 113), 2),
     ]
 
-    # 绘制曲线与右侧图例卡片
     legend_x = 1412
     legend_y = 135
-    draw.text((legend_x, legend_y - 32), f"期末净值与核心指标 ({cap_wan}本金)", fill=(248, 250, 252), font=f_sub)
+    draw.text((legend_x, legend_y - 32), f"期末净值与实盘指标 ({cap_wan}本金)", fill=(248, 250, 252), font=f_sub)
 
     for col, label, color, width in series_cfg:
         vals = nav_df[col].values
@@ -124,9 +117,9 @@ def render_png_chart():
             pts1.append((px, py))
         draw.line(pts1, fill=color, width=width)
 
-        # 计算回撤序列并绘制
         s = pd.Series(vals)
-        dd = ((s - s.cummax()) / s.cummax() * 100.0).values
+        peak = np.maximum(init_cap, s.cummax())
+        dd = ((s - peak) / peak * 100.0).values
         if col != "bench_fixed_income":
             pts2 = []
             for i, d_v in enumerate(dd):
@@ -135,7 +128,6 @@ def render_png_chart():
                 pts2.append((px, py))
             draw.line(pts2, fill=color, width=max(1, width - 1))
 
-        # 右侧指标卡片
         final_v = vals[-1]
         tot_ret = (final_v / init_cap - 1.0) * 100.0
         max_dd = dd.min()
@@ -167,7 +159,7 @@ def render_png_chart():
     img.save(out_png1)
     if ARTIFACT_DIR.exists():
         img.save(ARTIFACT_DIR / "backtest_comparison.png")
-    print(f"高清回测对比图已生成: {out_png1}")
+    print(f"高清实盘级回测对比图已生成: {out_png1}")
 
 
 def render_html_dashboard():
@@ -175,30 +167,27 @@ def render_html_dashboard():
         bt_data = json.load(f)
     with open(OUTPUT_DIR / "live_signal_eastmoney.json", "r", encoding="utf-8") as f:
         live_data = json.load(f)
-    nav_df = pd.read_csv(OUTPUT_DIR / "backtest_nav_history.csv")
 
-    # 抽样每3个交易日以减小HTML体积并保持丝滑交互
-    sampled = nav_df.iloc[::3].copy()
-    chart_json = {
-        "dates": sampled["date"].tolist(),
-        "s1": sampled["strategy1_all_weather"].tolist(),
-        "s2": sampled["strategy2_momentum"].tolist(),
-        "combo": sampled["strategy_combo"].tolist(),
-        "bond": sampled["bench_bond"].tolist(),
-        "fixed": sampled["bench_fixed_income"].tolist(),
-        "hs300": sampled["bench_hs300"].tolist(),
-    }
+    is_fri = bool(live_data.get("is_friday_rebalance_window", False))
+    banner_bg = "#064e3b" if is_fri else "#3b2f13"
+    banner_border = "#10b981" if is_fri else "#f59e0b"
+    banner_text_col = "#a7f3d0" if is_fri else "#fde68a"
+
+    m0, m1, m2 = bt_data["metrics"][0], bt_data["metrics"][1], bt_data["metrics"][2]
+    combo_ratio_label = live_data.get("combo_ratio_label", "40%全天候固收底座 + 60%跨资产动量轮动")
+    util_pct = live_data["used_combo_cash"] / live_data["total_capital"] * 100.0
 
     html = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>东方财富 {live_data['total_capital']/10000:.1f}万元场内ETF量化回测与实盘信号终端</title>
+<title>东方财富 {live_data['total_capital']/10000:.1f}万元场内ETF量化回测与实盘信号终端 (v2.0 严格实盘版)</title>
 <style>
   body {{ font-family: 'Microsoft YaHei', sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }}
-  .container {{ max-width: 1320px; margin: 0 auto; }}
+  .container {{ max-width: 1340px; margin: 0 auto; }}
   h1 {{ font-size: 26px; margin-bottom: 6px; color: #38bdf8; }}
-  .subtitle {{ color: #94a3b8; font-size: 14px; margin-bottom: 22px; }}
+  .subtitle {{ color: #94a3b8; font-size: 14px; margin-bottom: 18px; line-height: 1.6; }}
+  .banner {{ background: {banner_bg}; border: 1px solid {banner_border}; color: {banner_text_col}; padding: 14px 18px; border-radius: 8px; margin-bottom: 22px; font-size: 15px; font-weight: bold; }}
   .grid-cards {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }}
   .card {{ background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; }}
   .card h3 {{ margin: 0 0 10px 0; font-size: 17px; }}
@@ -212,95 +201,45 @@ def render_html_dashboard():
   tr:nth-child(even) {{ background: #162032; }}
   .section {{ background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 24px; }}
   .section h2 {{ margin-top: 0; font-size: 19px; color: #f1f5f9; border-left: 4px solid #38bdf8; padding-left: 10px; }}
-  .tag-ok {{ background: #065f46; color: #6ee7b7; padding: 3px 8px; border-radius: 4px; font-size: 12px; }}
-  .tag-safe {{ background: #374151; color: #cbd5e1; padding: 3px 8px; border-radius: 4px; font-size: 12px; }}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>🚀 东方财富 {live_data['total_capital']/10000:.1f}万元本金 场内ETF量化回测与实盘信号终端</h1>
-  <div class="subtitle">最新行情基准日：{live_data['as_of_date']} ｜ 本次实时刷新时间：<b style="color:#34d399;">{live_data.get('generated_at', '')}</b> ｜ 免可转债10万权限门槛 ｜ 0印花税</div>
+  <h1>🚀 东方财富 {live_data['total_capital']/10000:.1f}万元本金 场内ETF量化回测与实盘信号终端 <span style="font-size:15px;color:#34d399;">(v2.0 零注水严格实盘引擎)</span></h1>
+  <div class="subtitle">
+    最新行情基准日：<b>{live_data['as_of_date']} ({live_data.get('as_of_weekday', '')})</b> ｜ 本次刷新时间：<b style="color:#34d399;">{live_data.get('generated_at', '')}</b> ｜ 上次同步持仓日：{live_data.get('last_sync_date', '未记录')}<br/>
+    回测与实盘同源准则：<b>100股整手撮合(raw_close) + 东财万1.5不免5(最低5元/笔) + 万2滑点 + 自然周周五14:45调仓 + 0盘中网格注水</b>
+  </div>
+
+  <div class="banner">{live_data.get('timing_banner', '')}</div>
 
   <div class="grid-cards">
     <div class="card" style="border-top: 4px solid #34d399;">
-      <h3 class="green">🛡️ 策略一：全天候“超级固收+” + 东财ATR网格</h3>
-      <div class="big-num green">¥{bt_data['metrics'][0]['final_capital']:,.0f} <span style="font-size:16px;">(+{bt_data['metrics'][0]['total_return_pct']}%)</span></div>
-      <div>年化收益：<b>{bt_data['metrics'][0]['cagr_pct']}%</b> ｜ 最大回撤：<b>{bt_data['metrics'][0]['max_drawdown_pct']}%</b></div>
-      <div style="color:#94a3b8;font-size:13px;margin-top:6px;">夏普比率 {bt_data['metrics'][0]['sharpe_ratio']}，2021~2026连续6年每年全部正收益！</div>
+      <h3 class="green">🛡️ 策略一：全天候“超级固收+”低波底座</h3>
+      <div class="big-num green">¥{m0['final_capital']:,.0f} <span style="font-size:16px;">(+{m0['total_return_pct']}%)</span></div>
+      <div>年化收益：<b>{m0['cagr_pct']}%</b> ｜ 最大回撤：<b>{m0['max_drawdown_pct']}%</b> ｜ 卡玛：<b>{m0['calmar_ratio']}</b></div>
+      <div style="color:#94a3b8;font-size:13px;margin-top:6px;">6年累计佣金 ¥{m0.get('total_commission_rmb', 0):,.0f} ({m0.get('order_count', 0)}笔)，连续6年全部正收益！</div>
     </div>
     <div class="card" style="border-top: 4px solid #fb923c;">
-      <h3 class="orange">🔥 策略二：跨市场ETF动量轮动 + 国债避险</h3>
-      <div class="big-num orange">¥{bt_data['metrics'][1]['final_capital']:,.0f} <span style="font-size:16px;">(+{bt_data['metrics'][1]['total_return_pct']}%)</span></div>
-      <div>年化收益：<b>{bt_data['metrics'][1]['cagr_pct']}%</b> ｜ 最大回撤：<b>{bt_data['metrics'][1]['max_drawdown_pct']}%</b></div>
-      <div style="color:#94a3b8;font-size:13px;margin-top:6px;">牛市抓强势资产主升浪，熊市自动切入十年国债ETF避险。</div>
+      <h3 class="orange">🔥 策略二：跨资产多维动量轮动 + 双债避险</h3>
+      <div class="big-num orange">¥{m1['final_capital']:,.0f} <span style="font-size:16px;">(+{m1['total_return_pct']}%)</span></div>
+      <div>年化收益：<b>{m1['cagr_pct']}%</b> ｜ 最大回撤：<b>{m1['max_drawdown_pct']}%</b> ｜ 夏普：<b>{m1['sharpe_ratio']}</b></div>
+      <div style="color:#94a3b8;font-size:13px;margin-top:6px;">含创业板(159915)与有色(159980) + Top-3 缓冲，6年年年正收益！</div>
     </div>
     <div class="card" style="border-top: 4px solid #38bdf8;">
-      <h3 class="blue">⭐ 推荐组合：50%全天候网格 + 50%动量轮动</h3>
-      <div class="big-num blue">¥{bt_data['metrics'][2]['final_capital']:,.0f} <span style="font-size:16px;">(+{bt_data['metrics'][2]['total_return_pct']}%)</span></div>
-      <div>年化收益：<b>{bt_data['metrics'][2]['cagr_pct']}%</b> ｜ 最大回撤：<b>{bt_data['metrics'][2]['max_drawdown_pct']}%</b></div>
-      <div style="color:#94a3b8;font-size:13px;margin-top:6px;">{live_data['total_capital']/10000:.1f}万元实战最佳平衡点：收益接近翻倍，回撤控制在8%以内。</div>
+      <h3 class="blue">⭐ 推荐组合：{combo_ratio_label}</h3>
+      <div class="big-num blue">¥{m2['final_capital']:,.0f} <span style="font-size:16px;">(+{m2['total_return_pct']}%)</span></div>
+      <div>年化收益：<b>{m2['cagr_pct']}%</b> ｜ 最大回撤：<b>{m2['max_drawdown_pct']}%</b> ｜ 夏普：<b>{m2['sharpe_ratio']}</b></div>
+      <div style="color:#94a3b8;font-size:13px;margin-top:6px;">单一6万实盘账户动态配平（扣尽整手零头与5元低消），回撤严控8%内！</div>
     </div>
   </div>
 
   <div class="section">
-    <h2>📊 一、2021 ~ 2026 历史回测核心指标与分年度收益对比（本金：{live_data['total_capital']:,.0f}元）</h2>
+    <h2>📌 一、今日东方财富 {live_data['total_capital']:,.0f} 元实盘【先卖后买】差额执行清单（真实资金利用率 {util_pct:.1f}%，预留零钱 ¥{live_data['reserve_cash']:,.1f}）</h2>
+    <h3 style="color:#38bdf8;font-size:16px;margin-top:8px;">⭐ 推荐二合一（{combo_ratio_label}）差额执行表（每周五 14:45 按此表操作）：</h3>
     <table>
       <thead>
-        <tr>
-          <th>策略 / 基准名称</th><th>期末总资产</th><th>净赚利润</th><th>年化收益(CAGR)</th><th>最大回撤</th><th>夏普比率</th>
-          <th>2021年</th><th>2022年(熊市)</th><th>2023年</th><th>2024年</th><th>2025年</th><th>2026年</th>
-        </tr>
-      </thead>
-      <tbody>
-"""
-    for m in bt_data["metrics"]:
-        yr = m["yearly_returns_pct"]
-        html += f"""        <tr>
-          <td style="text-align:left;font-weight:bold;">{m['name']}</td>
-          <td>¥{m['final_capital']:,.0f}</td>
-          <td style="color:{'#34d399' if m['net_profit']>=0 else '#f87171'};">{'+' if m['net_profit']>=0 else ''}¥{m['net_profit']:,.0f}</td>
-          <td><b>{m['cagr_pct']}%</b></td>
-          <td style="color:#fca5a5;">{m['max_drawdown_pct']}%</td>
-          <td>{m['sharpe_ratio']}</td>
-          <td>{yr.get('2021',0):+.2f}%</td>
-          <td>{yr.get('2022',0):+.2f}%</td>
-          <td>{yr.get('2023',0):+.2f}%</td>
-          <td>{yr.get('2024',0):+.2f}%</td>
-          <td>{yr.get('2025',0):+.2f}%</td>
-          <td>{yr.get('2026',0):+.2f}%</td>
-        </tr>\n"""
-
-    html += """      </tbody>
-    </table>
-    <div style="margin-top: 18px; text-align: center;">
-      <img src="backtest_comparison.png" style="max-width: 100%; border-radius: 8px; border: 1px solid #334155;" />
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>📌 二、今日东方财富 {live_data['total_capital']:,.0f} 元实盘一键下单清单（已按 1手=100股 智能取整，资金利用率 {live_data['used_combo_cash']/live_data['total_capital']*100:.1f}%）</h2>
-    <p style="color:#94a3b8;font-size:13px;">你可以根据自己的风险偏好，从下方【策略一（极低回撤固收+）】或【二合一推荐组合】中任选其一在东方财富APP下单：</p>
-    <h3 style="color:#34d399;font-size:16px;">选项 1：如果你追求极度稳健（最大回撤 ~2.1%，连续6年年年正收益）👉 按【策略一】配仓：</h3>
-    <table>
-      <thead>
-        <tr><th>ETF代码</th><th>ETF名称</th><th>最新实盘价</th><th>目标权重</th><th>建议买入股数(100股整数倍)</th><th>预计占用资金(元)</th><th>资产定位说明</th></tr>
-      </thead>
-      <tbody>
-"""
-    for row in live_data["strategy1_orders"]:
-        html += f"""        <tr>
-          <td><b>{row['code']}</b></td><td>{row['name']}</td><td>{row['latest_price']}</td>
-          <td>{row['target_weight_pct']}%</td><td style="color:#34d399;font-weight:bold;">{row['suggest_shares']} 股 ({row['suggest_lots']}手)</td>
-          <td>¥{row['actual_amt']:,.1f}</td><td style="text-align:left;color:#94a3b8;">{row['note']}</td>
-        </tr>\n"""
-
-    html += """      </tbody>
-    </table>
-
-    <h3 style="color:#38bdf8;font-size:16px;margin-top:20px;">⭐ 推荐二合一（50%全天候网格 + 50%动量轮动）本周五【先卖后买】差额执行表：</h3>
-    <table>
-      <thead>
-        <tr><th>执行顺序与动作</th><th>ETF代码</th><th>ETF名称</th><th>最新参考价</th><th>当前持仓(股)</th><th>目标持仓(股)</th><th>本次需交易股数</th><th>预计成交金额(元)</th></tr>
+        <tr><th>执行顺序与动作</th><th>ETF代码</th><th>ETF名称</th><th>最新实盘价</th><th>当前持仓(股)</th><th>目标持仓(股)</th><th>本次需交易股数</th><th>预计成交金额(元)</th></tr>
       </thead>
       <tbody>
 """
@@ -316,23 +255,122 @@ def render_html_dashboard():
 
     html += """      </tbody>
     </table>
-  </div>
 
-  <div class="section">
-    <h2>⚙️ 三、东方财富 APP「网格交易条件单」自动高抛低吸参数表</h2>
-    <p style="color:#94a3b8;font-size:13px;">买入底仓后，打开 <b>东方财富APP -> 交易 -> 条件单 -> 网格交易</b>，填入以下由近20日ATR波动率自动算出的网格参数，即可免盯盘自动收割震荡收益：</p>
+    <h3 style="color:#fb923c;font-size:16px;margin-top:22px;">📈 6大跨资产零溢价池 实时多周期动量 (10/20/30日 OLS斜率×R²) 打分与 Top-3 缓冲榜：</h3>
     <table>
       <thead>
-        <tr><th>ETF代码</th><th>ETF名称</th><th>触发基准价</th><th>每上涨卖出</th><th>每下跌买入</th><th>网格价格上下限</th><th>每笔委托股数</th><th>单格金额</th><th>实盘开启建议</th></tr>
+        <tr><th>ETF代码</th><th>ETF名称</th><th>最新价</th><th>近20日涨跌</th><th>近5日涨跌</th><th>20日年化波动</th><th>站上MA20</th><th>10/20/30日动量分</th><th>综合动量×R²</th><th>风险调整得分</th><th>当前信号状态</th></tr>
       </thead>
       <tbody>
 """
-    for g in live_data["strategy1_grid_params"]:
+    for b in live_data.get("strategy2_momentum_board", []):
+        st = b["passed_filter"]
+        st_col = "#34d399" if ("主力入选" in st or "缓冲留存" in st) else ("#fbbf24" if "备选" in st else "#94a3b8")
+        adj_txt = f"{b['risk_adj_score']:.3f}" if b["risk_adj_score"] > -900 else "-"
         html += f"""        <tr>
-          <td><b>{g['code']}</b></td><td>{g['name']}</td><td>{g['base_price']}</td>
-          <td style="color:#f87171;">{g['step_up_sell_pct']}</td><td style="color:#34d399;">{g['step_down_buy_pct']}</td>
-          <td>{g['price_range']}</td><td><b>{g['shares_per_grid']} 股</b></td><td>¥{g['est_amount_per_grid']}</td>
-          <td style="text-align:left;">{g.get('status_note', '')}</td>
+          <td><b>{b['code']}</b></td><td>{b['name']}</td><td>{b['raw_price']}</td>
+          <td style="color:{'#f87171' if b['ret_20d_pct']>0 else '#34d399'};">{b['ret_20d_pct']:+.2f}%</td>
+          <td style="color:{'#f87171' if b['ret_5d_pct']>0 else '#34d399'};">{b['ret_5d_pct']:+.2f}%</td>
+          <td>{b['vol_20d_pct']:.1f}%</td><td>{b['above_ma20']}</td>
+          <td style="color:#cbd5e1;font-size:13px;">{b['score_10_20_30']}</td>
+          <td><b>{b['momentum_r2_score']:+.3f}</b></td><td>{adj_txt}</td>
+          <td style="color:{st_col};font-weight:bold;">{st}</td>
+        </tr>\n"""
+
+    html += """      </tbody>
+    </table>
+
+    <details style="margin-top:16px;">
+      <summary style="cursor:pointer;color:#34d399;font-weight:bold;">👉 展开查看【纯策略一：极低回撤全天候固收+（最大回撤 -1.95%）】独立配仓参考表</summary>
+      <table style="margin-top:10px;">
+        <thead>
+          <tr><th>ETF代码</th><th>ETF名称</th><th>最新实盘价</th><th>目标权重</th><th>建议持仓股数(100股整数倍)</th><th>预计占用资金(元)</th><th>资产定位说明</th></tr>
+        </thead>
+        <tbody>
+"""
+    for row in live_data["strategy1_orders"]:
+        html += f"""          <tr>
+            <td><b>{row['code']}</b></td><td>{row['name']}</td><td>{row['latest_price']}</td>
+            <td>{row['target_weight_pct']}%</td><td style="color:#34d399;font-weight:bold;">{row['suggest_shares']} 股 ({row['suggest_lots']}手)</td>
+            <td>¥{row['actual_amt']:,.1f}</td><td style="text-align:left;color:#94a3b8;">{row['note']}</td>
+          </tr>\n"""
+
+    html += f"""        </tbody>
+      </table>
+    </details>
+  </div>
+
+  <div class="section">
+    <h2>📊 二、2021 ~ 2026 严格实盘级历史回测核心指标与分年度净收益（本金：{live_data['total_capital']:,.0f}元 | 100股整手 + 不免5最低5元佣金）</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>策略 / 基准名称</th><th>期末总资产</th><th>净赚利润</th><th>年化收益(CAGR)</th><th>最大回撤</th><th>夏普</th><th>6年实缴佣金</th>
+          <th>2021年</th><th>2022年(熊市)</th><th>2023年</th><th>2024年</th><th>2025年</th><th>2026年</th>
+        </tr>
+      </thead>
+      <tbody>
+"""
+    for m in bt_data["metrics"]:
+        yr = m["yearly_returns_pct"]
+        fee_cell = f"¥{m['total_commission_rmb']:,.0f} ({m['order_count']}笔)" if "order_count" in m else "-"
+        html += f"""        <tr>
+          <td style="text-align:left;font-weight:bold;">{m['name']}</td>
+          <td>¥{m['final_capital']:,.0f}</td>
+          <td style="color:{'#34d399' if m['net_profit']>=0 else '#f87171'};">{'+' if m['net_profit']>=0 else ''}¥{m['net_profit']:,.0f}</td>
+          <td><b>{m['cagr_pct']}%</b></td>
+          <td style="color:#fca5a5;">{m['max_drawdown_pct']}%</td>
+          <td>{m['sharpe_ratio']}</td>
+          <td style="color:#cbd5e1;font-size:13px;">{fee_cell}</td>
+          <td>{yr.get('2021',0):+.2f}%</td>
+          <td>{yr.get('2022',0):+.2f}%</td>
+          <td>{yr.get('2023',0):+.2f}%</td>
+          <td>{yr.get('2024',0):+.2f}%</td>
+          <td>{yr.get('2025',0):+.2f}%</td>
+          <td>{yr.get('2026',0):+.2f}%</td>
+        </tr>\n"""
+
+    html += """      </tbody>
+    </table>
+    <div style="margin-top: 18px; text-align: center;">
+      <img src="backtest_comparison.png" style="max-width: 100%; border-radius: 8px; border: 1px solid #334155;" />
+    </div>
+
+    <details style="margin-top:16px;">
+      <summary style="cursor:pointer;color:#38bdf8;font-weight:bold;">📅 展开核验【推荐组合最近 8 次历史调仓交割记录】（严格对齐自然周周五，零节假日漂移）</summary>
+      <table style="margin-top:10px;">
+        <thead>
+          <tr><th>调仓日期</th><th>星期校验</th><th>成交笔数</th><th>当周佣金+滑点</th><th>留存现金</th><th>调仓后账户总净值</th><th>调仓后实盘整手持仓明细</th></tr>
+        </thead>
+        <tbody>
+"""
+    for lg in bt_data.get("recent_logs_combo", []):
+        sh_str = " ｜ ".join(f"{k}: {v}股" for k, v in lg["shares"].items())
+        html += f"""          <tr>
+            <td><b>{lg['date']}</b></td><td style="color:#34d399;font-weight:bold;">{lg['weekday']}</td>
+            <td>{lg['orders_executed']} 笔</td><td>¥{lg['fee_and_slip_rmb']:.2f}</td>
+            <td>¥{lg['cash_left']:,.1f}</td><td><b>¥{lg['nav']:,.1f}</b></td>
+            <td style="text-align:left;color:#cbd5e1;font-size:13px;">{sh_str}</td>
+          </tr>\n"""
+
+    html += """        </tbody>
+      </table>
+    </details>
+  </div>
+
+  <div class="section">
+    <h2>🛡️ 三、四大实盘风控与防磨损保护面板（为什么停用盘中网格每年多赚 +1.36%）</h2>
+    <table>
+      <thead>
+        <tr><th style="width:20%;">保护模块</th><th style="width:26%;">当前实时状态</th><th>量化实证原理与东财 APP 操作指引</th></tr>
+      </thead>
+      <tbody>
+"""
+    for p in live_data.get("protection_mechanisms", []):
+        html += f"""        <tr>
+          <td style="font-weight:bold;color:#38bdf8;">{p['module']}</td>
+          <td style="font-weight:bold;color:#34d399;">{p['state']}</td>
+          <td style="text-align:left;color:#cbd5e1;line-height:1.55;">{p['detail']}</td>
         </tr>\n"""
 
     html += """      </tbody>
@@ -340,31 +378,31 @@ def render_html_dashboard():
   </div>
 
   <div class="section">
-    <h2>🌍 四、跨境 ETF 实时折溢价防雷监控（主力：513030 德国ETF vs 纳指高溢价对照）</h2>
+    <h2>🌍 四、主力 ETF 实时 IOPV 折溢价防雷监控（德国 / 有色 / 创业板 vs 纳指高溢价对照）</h2>
     <p style="color:#34d399;font-size:14px;font-weight:bold;">""" + live_data.get("nasdaq_premium_guard", {}).get("advice", "") + """</p>
     <table>
       <thead>
-        <tr><th>优先级</th><th>ETF代码</th><th>ETF名称</th><th>场内最新价</th><th>IOPV参考净值</th><th>实时折溢价率</th><th>风控状态与操作建议</th></tr>
+        <tr><th>排序</th><th>ETF代码</th><th>ETF名称</th><th>场内最新价</th><th>IOPV参考净值</th><th>实时折溢价率</th><th>风控状态与操作建议</th></tr>
       </thead>
       <tbody>
 """
     nq_list = live_data.get("nasdaq_premium_guard", {}).get("all_candidates", [])
     for idx, nq in enumerate(nq_list):
         p_pct = nq["premium_pct"]
-        if p_pct > 4.0:
+        if p_pct > 5.5:
             st_text = "🚨 极高溢价(已彻底弃用防雷)"
             p_col = "#f87171"
-        elif p_pct > 2.5:
-            st_text = "⚠️ 溢价超2.5%熔断线(禁止追高)"
+        elif p_pct > 2.8:
+            st_text = "⚠️ 溢价超2.8%新买线(空仓禁追高/底仓观察)"
             p_col = "#fb923c"
-        elif nq["code"] == "513030":
-            st_text = "⭐ 当前海外主力(近0溢价+动量第1名)"
+        elif nq["code"] in ("513030", "159980", "159915"):
+            st_text = "⭐ 核心策略池成员(零溢价/折价安全区)"
             p_col = "#34d399"
         else:
-            st_text = "✅ 溢价安全(备用观察)"
+            st_text = "✅ 溢价安全(备用对照)"
             p_col = "#cbd5e1"
         html += f"""        <tr>
-          <td>第 {idx+1} 选</td><td><b>{nq['code']}</b></td><td>{nq['name']}</td>
+          <td>#{idx+1}</td><td><b>{nq['code']}</b></td><td>{nq['name']}</td>
           <td>{nq['price']:.3f}</td><td>{nq['iopv']:.4f}</td>
           <td style="color:{p_col};font-weight:bold;">{p_pct:+.2f}%</td>
           <td style="color:{p_col};">{st_text}</td>

@@ -20,12 +20,14 @@ DATA_DIR = Path(__file__).parent / "data"
 # 零权限门槛、高流动性、低相关性场内核心 ETF 池
 ETF_UNIVERSE = {
     "511260": {"name": "十年国债ETF", "secid": "1.511260", "symbol": "sh511260", "category": "bond", "desc": "长久期国债，股市大跌时的避险安全屋"},
-    "511360": {"name": "短融ETF", "secid": "1.511360", "symbol": "sh511360", "category": "cash_bond", "desc": "超低波动短债，类现金管理"},
+    "511360": {"name": "短融ETF", "secid": "1.511360", "symbol": "sh511360", "category": "cash_bond", "desc": "超低波动短债，长债破位加息周期时的避风港"},
     "511380": {"name": "可转债ETF", "secid": "1.511380", "symbol": "sh511380", "category": "cb", "desc": "免10万权限门槛的一篮子可转债，进可攻退可守"},
     "512890": {"name": "红利低波ETF", "secid": "1.512890", "symbol": "sh512890", "category": "equity_val", "desc": "高股息+低波动，熊市抗跌、长期复利核心"},
     "518880": {"name": "黄金ETF", "secid": "1.518880", "symbol": "sh518880", "category": "gold", "desc": "T+0抗通胀避险资产，与A股低相关"},
     "513030": {"name": "德国ETF", "secid": "1.513030", "symbol": "sh513030", "category": "global", "desc": "T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价"},
-    "510500": {"name": "中证500ETF", "secid": "1.510500", "symbol": "sh510500", "category": "equity_growth", "desc": "A股中盘成长弹性代表"},
+    "159915": {"name": "创业板ETF", "secid": "0.159915", "symbol": "sz159915", "category": "equity_growth", "desc": "A股高弹性科技成长核心宽基，流动性极佳且近0溢价"},
+    "159980": {"name": "有色ETF", "secid": "0.159980", "symbol": "sz159980", "category": "commodity", "desc": "大宗工业金属商品期货ETF，抗通胀与顺周期对冲利器"},
+    "510500": {"name": "中证500ETF", "secid": "1.510500", "symbol": "sh510500", "category": "equity_mid", "desc": "A股中盘宽基对照"},
     "510300": {"name": "沪深300ETF", "secid": "1.510300", "symbol": "sh510300", "category": "benchmark", "desc": "A股大盘宽基基准"},
 }
 

@@ -1,78 +1,103 @@
 {
+  "execution_model": {
+    "initial_capital": 60000.0,
+    "lot_size_shares": 100,
+    "commission_rate": 0.00015,
+    "min_commission_rmb": 5.0,
+    "slippage_rate": 0.0002,
+    "cash_repo_yield": 0.015,
+    "reserve_cash_ratio": 0.015,
+    "min_rebalance_ratio": 0.04,
+    "combo_weights": {
+      "s1": 0.4,
+      "s2": 0.6
+    },
+    "rebalance_calendar": "ISO自然周最后一个交易日(周五14:45，遇长假对齐节前最后交易日)",
+    "intraday_grid_enabled": false
+  },
   "metrics": [
     {
-      "name": "策略一：全天候“超级固收+” + 东财ATR网格",
-      "initial_capital": 59951.83,
-      "final_capital": 86106.72,
-      "net_profit": 26154.9,
-      "total_return_pct": 43.63,
-      "cagr_pct": 6.39,
-      "max_drawdown_pct": -2.36,
-      "ann_vol_pct": 2.88,
-      "sharpe_ratio": 1.52,
-      "calmar_ratio": 2.71,
-      "monthly_win_rate_pct": 78.6,
+      "name": "策略一：全天候“超级固收+”底座 (实盘整手·不免5)",
+      "initial_capital": 60000.0,
+      "final_capital": 79228.14,
+      "net_profit": 19228.14,
+      "total_return_pct": 32.05,
+      "cagr_pct": 4.87,
+      "max_drawdown_pct": -1.95,
+      "ann_vol_pct": 2.61,
+      "sharpe_ratio": 1.1,
+      "calmar_ratio": 2.49,
+      "monthly_win_rate_pct": 75.7,
       "yearly_returns_pct": {
-        "2021": 6.18,
-        "2022": 1.55,
-        "2023": 6.45,
-        "2024": 10.33,
-        "2025": 8.93,
-        "2026": 4.12
-      }
+        "2021": 5.14,
+        "2022": 0.84,
+        "2023": 5.08,
+        "2024": 9.42,
+        "2025": 6.23,
+        "2026": 1.97
+      },
+      "order_count": 297,
+      "total_commission_rmb": 1623.54,
+      "total_cost_with_slip_rmb": 2424.41
     },
     {
-      "name": "策略二：跨市场ETF动量轮动 + 国债避险",
-      "initial_capital": 59930.42,
-      "final_capital": 139485.56,
-      "net_profit": 79555.14,
-      "total_return_pct": 132.75,
-      "cagr_pct": 15.54,
-      "max_drawdown_pct": -15.98,
-      "ann_vol_pct": 12.46,
-      "sharpe_ratio": 1.09,
-      "calmar_ratio": 0.97,
+      "name": "策略二：跨资产多维动量轮动 (实盘整手·不免5)",
+      "initial_capital": 60000.0,
+      "final_capital": 142042.26,
+      "net_profit": 82042.26,
+      "total_return_pct": 136.74,
+      "cagr_pct": 15.87,
+      "max_drawdown_pct": -11.13,
+      "ann_vol_pct": 13.85,
+      "sharpe_ratio": 1.0,
+      "calmar_ratio": 1.43,
       "monthly_win_rate_pct": 65.7,
       "yearly_returns_pct": {
-        "2021": 5.55,
-        "2022": 2.44,
-        "2023": 12.81,
-        "2024": 11.63,
-        "2025": 48.15,
-        "2026": 15.38
-      }
+        "2021": 13.85,
+        "2022": 17.98,
+        "2023": 0.99,
+        "2024": 8.89,
+        "2025": 48.62,
+        "2026": 7.83
+      },
+      "order_count": 468,
+      "total_commission_rmb": 3115.54,
+      "total_cost_with_slip_rmb": 6766.48
     },
     {
-      "name": "推荐组合：50%全天候网格 + 50%动量轮动",
-      "initial_capital": 59941.13,
-      "final_capital": 112796.14,
-      "net_profit": 52855.02,
-      "total_return_pct": 88.18,
-      "cagr_pct": 11.42,
-      "max_drawdown_pct": -9.07,
-      "ann_vol_pct": 7.71,
-      "sharpe_ratio": 1.22,
-      "calmar_ratio": 1.26,
-      "monthly_win_rate_pct": 67.1,
+      "name": "推荐组合：40%全天候底座 + 60%跨资产动量 (实盘整手·不免5)",
+      "initial_capital": 60000.0,
+      "final_capital": 113942.57,
+      "net_profit": 53942.57,
+      "total_return_pct": 89.9,
+      "cagr_pct": 11.59,
+      "max_drawdown_pct": -7.82,
+      "ann_vol_pct": 8.79,
+      "sharpe_ratio": 1.09,
+      "calmar_ratio": 1.48,
+      "monthly_win_rate_pct": 68.6,
       "yearly_returns_pct": {
-        "2021": 5.86,
-        "2022": 1.99,
-        "2023": 9.63,
-        "2024": 11.0,
-        "2025": 29.25,
-        "2026": 10.81
-      }
+        "2021": 11.9,
+        "2022": 10.14,
+        "2023": 2.2,
+        "2024": 9.54,
+        "2025": 29.89,
+        "2026": 5.97
+      },
+      "order_count": 649,
+      "total_commission_rmb": 3337.68,
+      "total_cost_with_slip_rmb": 5725.12
     },
     {
       "name": "基准A：纯十年国债ETF (511260) 持有",
       "initial_capital": 60000.0,
-      "final_capital": 78017.03,
-      "net_profit": 18017.03,
-      "total_return_pct": 30.03,
-      "cagr_pct": 4.59,
+      "final_capital": 77938.47,
+      "net_profit": 17938.47,
+      "total_return_pct": 29.9,
+      "cagr_pct": 4.57,
       "max_drawdown_pct": -2.27,
       "ann_vol_pct": 2.19,
-      "sharpe_ratio": 1.18,
+      "sharpe_ratio": 1.17,
       "calmar_ratio": 2.02,
       "monthly_win_rate_pct": 77.1,
       "yearly_returns_pct": {
@@ -81,39 +106,39 @@
         "2023": 4.54,
         "2024": 9.28,
         "2025": 0.36,
-        "2026": 4.16
+        "2026": 4.06
       }
     },
     {
       "name": "基准B：传统银行固收理财 (2.8%年化)",
       "initial_capital": 60000.0,
-      "final_capital": 70158.49,
-      "net_profit": 10158.49,
-      "total_return_pct": 16.93,
-      "cagr_pct": 2.71,
+      "final_capital": 70521.32,
+      "net_profit": 10521.32,
+      "total_return_pct": 17.54,
+      "cagr_pct": 2.8,
       "max_drawdown_pct": 0.0,
-      "ann_vol_pct": 0.0,
-      "sharpe_ratio": 0.0,
+      "ann_vol_pct": 0.14,
+      "sharpe_ratio": 5.75,
       "calmar_ratio": 0.0,
       "monthly_win_rate_pct": 100.0,
       "yearly_returns_pct": {
-        "2021": 2.71,
-        "2022": 2.71,
-        "2023": 2.71,
-        "2024": 2.71,
-        "2025": 2.72,
-        "2026": 2.29
+        "2021": 2.77,
+        "2022": 2.79,
+        "2023": 2.79,
+        "2024": 2.82,
+        "2025": 2.8,
+        "2026": 2.41
       }
     },
     {
       "name": "基准C：沪深300ETF (510300) 买入死拿",
       "initial_capital": 60000.0,
-      "final_capital": 51228.58,
-      "net_profit": -8771.42,
-      "total_return_pct": -14.62,
-      "cagr_pct": -2.67,
+      "final_capital": 51414.41,
+      "net_profit": -8585.59,
+      "total_return_pct": -14.31,
+      "cagr_pct": -2.6,
       "max_drawdown_pct": -44.75,
-      "ann_vol_pct": 19.26,
+      "ann_vol_pct": 19.25,
       "sharpe_ratio": -0.24,
       "calmar_ratio": -0.06,
       "monthly_win_rate_pct": 51.4,
@@ -123,179 +148,353 @@
         "2023": -10.43,
         "2024": 18.39,
         "2025": 21.49,
-        "2026": -10.69
+        "2026": -10.37
       }
     }
   ],
   "recent_logs_strategy1": [
     {
-      "date": "2026-06-04",
-      "weights": {
-        "511260": 0.8393,
-        "511380": 0.0448,
-        "512890": 0.0489,
-        "518880": 0.0268,
-        "513030": 0.0402
+      "date": "2026-01-30",
+      "weekday": "周五",
+      "shares": {
+        "511260": 400,
+        "511380": 500,
+        "512890": 9200,
+        "518880": 300,
+        "513030": 800
       },
-      "turnover": 0.0634,
-      "nav": 84846.18
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 11.68,
+      "cash_left": 2432.6,
+      "nav": 79140.6
     },
     {
-      "date": "2026-06-18",
-      "weights": {
-        "511260": 0.7931,
-        "511380": 0.1078,
-        "512890": 0.0388,
-        "518880": 0.021,
-        "513030": 0.0392
+      "date": "2026-03-20",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "511380": 100,
+        "512890": 5500,
+        "518880": 100,
+        "513030": 800
       },
-      "turnover": 0.1259,
-      "nav": 84529.68
+      "orders_executed": 4,
+      "fee_and_slip_rmb": 25.07,
+      "cash_left": 792.19,
+      "nav": 78576.19
     },
     {
-      "date": "2026-07-17",
-      "weights": {
-        "511260": 0.83,
-        "511380": 0.056,
-        "512890": 0.0723,
-        "518880": 0.0249,
-        "513030": 0.0168
+      "date": "2026-04-17",
+      "weekday": "周五",
+      "shares": {
+        "511260": 400,
+        "511380": 500,
+        "512890": 5500,
+        "518880": 500,
+        "513030": 800
       },
-      "turnover": 0.1484,
-      "nav": 84348.53
+      "orders_executed": 3,
+      "fee_and_slip_rmb": 19.65,
+      "cash_left": 4886.98,
+      "nav": 79094.98
     },
     {
-      "date": "2026-07-31",
-      "weights": {
-        "511260": 0.7381,
-        "511380": 0.1116,
-        "512890": 0.0759,
-        "518880": 0.0351,
-        "513030": 0.0393
+      "date": "2026-04-30",
+      "weekday": "周四",
+      "shares": {
+        "511260": 400,
+        "511380": 500,
+        "512890": 10700,
+        "518880": 200,
+        "513030": 800
       },
-      "turnover": 0.1839,
-      "nav": 85048.64
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 11.82,
+      "cash_left": 1603.21,
+      "nav": 78908.11
     },
     {
-      "date": "2026-08-14",
-      "weights": {
-        "511260": 0.7673,
-        "511380": 0.0527,
-        "512890": 0.081,
-        "518880": 0.0611,
-        "513030": 0.0379
+      "date": "2026-05-15",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "511380": 200,
+        "512890": 3800,
+        "518880": 200,
+        "513030": 500
       },
-      "turnover": 0.1206,
-      "nav": 85228.65
+      "orders_executed": 4,
+      "fee_and_slip_rmb": 25.27,
+      "cash_left": 859.08,
+      "nav": 78623.48
     },
     {
-      "date": "2026-09-11",
-      "weights": {
-        "511260": 0.765,
-        "511380": 0.0674,
-        "512890": 0.1086,
-        "518880": 0.0431,
-        "513030": 0.016
+      "date": "2026-08-07",
+      "weekday": "周五",
+      "shares": {
+        "511260": 400,
+        "511380": 700,
+        "512890": 3800,
+        "518880": 200,
+        "513030": 500
       },
-      "turnover": 0.0846,
-      "nav": 85276.22
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 14.11,
+      "cash_left": 8020.91,
+      "nav": 79178.31
     },
     {
-      "date": "2026-10-19",
-      "weights": {
-        "511260": 0.8095,
-        "511380": 0.0443,
-        "512890": 0.0936,
-        "518880": 0.0283,
-        "513030": 0.0243
+      "date": "2026-08-21",
+      "weekday": "周五",
+      "shares": {
+        "511260": 400,
+        "511380": 400,
+        "512890": 8700,
+        "518880": 600,
+        "513030": 500
       },
-      "turnover": 0.1056,
-      "nav": 85391.21
+      "orders_executed": 3,
+      "fee_and_slip_rmb": 17.72,
+      "cash_left": 2587.19,
+      "nav": 79161.79
     },
     {
-      "date": "2026-11-02",
-      "weights": {
-        "511260": 0.7967,
-        "511380": 0.0325,
-        "512890": 0.086,
-        "518880": 0.0318,
-        "513030": 0.053
+      "date": "2026-10-16",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "511380": 200,
+        "512890": 4200,
+        "518880": 200,
+        "513030": 500
       },
-      "turnover": 0.0645,
-      "nav": 85375.48
+      "orders_executed": 4,
+      "fee_and_slip_rmb": 24.98,
+      "cash_left": 958.3,
+      "nav": 78773.5
     }
   ],
   "recent_logs_strategy2": [
     {
-      "date": "2026-07-17",
-      "holdings": {
-        "511260": 0.5,
-        "512890": 0.5
-      },
-      "turnover": 1.0,
-      "nav": 129782.27
-    },
-    {
-      "date": "2026-07-31",
-      "holdings": {
-        "512890": 0.5,
-        "513030": 0.5
-      },
-      "turnover": 1.0,
-      "nav": 133216.48
-    },
-    {
-      "date": "2026-08-07",
-      "holdings": {
-        "518880": 0.5,
-        "513030": 0.5
-      },
-      "turnover": 1.0,
-      "nav": 133323.74
-    },
-    {
       "date": "2026-08-28",
-      "holdings": {
-        "512890": 0.5,
-        "518880": 0.5
+      "weekday": "周五",
+      "shares": {
+        "518880": 7600,
+        "513030": 38000
       },
-      "turnover": 1.0,
-      "nav": 138564.31
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 50.41,
+      "cash_left": 2064.26,
+      "nav": 147034.26
     },
     {
       "date": "2026-09-04",
-      "holdings": {
-        "511260": 0.5,
-        "512890": 0.5
+      "weekday": "周五",
+      "shares": {
+        "512890": 58300,
+        "159980": 32500
       },
-      "turnover": 1.0,
-      "nav": 137603.98
+      "orders_executed": 4,
+      "fee_and_slip_rmb": 98.55,
+      "cash_left": 1953.12,
+      "nav": 142748.72
+    },
+    {
+      "date": "2026-09-11",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "512890": 58300
+      },
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 48.36,
+      "cash_left": 4211.85,
+      "nav": 142272.75
     },
     {
       "date": "2026-09-18",
-      "holdings": {
-        "511260": 1.0
+      "weekday": "周五",
+      "shares": {
+        "511260": 1000
       },
-      "turnover": 1.0,
-      "nav": 136328.12
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 47.74,
+      "cash_left": 6460.79,
+      "nav": 141199.79
     },
     {
-      "date": "2026-10-12",
-      "holdings": {
-        "511260": 0.5,
-        "512890": 0.5
+      "date": "2026-10-09",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "512890": 59400
       },
-      "turnover": 1.0,
-      "nav": 136523.31
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 48.71,
+      "cash_left": 2074.87,
+      "nav": 141244.57
     },
     {
-      "date": "2026-11-09",
-      "holdings": {
-        "512890": 0.5,
-        "513030": 0.5
+      "date": "2026-10-23",
+      "weekday": "周五",
+      "shares": {
+        "511260": 1000
       },
-      "turnover": 1.0,
-      "nav": 137764.05
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 48.66,
+      "cash_left": 5688.86,
+      "nav": 141044.86
+    },
+    {
+      "date": "2026-10-30",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "512890": 57300
+      },
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 48.61,
+      "cash_left": 2081.55,
+      "nav": 140968.95
+    },
+    {
+      "date": "2026-11-06",
+      "weekday": "周五",
+      "shares": {
+        "512890": 56100,
+        "513030": 38400
+      },
+      "orders_executed": 3,
+      "fee_and_slip_rmb": 53.41,
+      "cash_left": 2190.87,
+      "nav": 140975.37
     }
+  ],
+  "recent_logs_combo": [
+    {
+      "date": "2026-08-28",
+      "weekday": "周五",
+      "shares": {
+        "511260": 300,
+        "511380": 100,
+        "512890": 3200,
+        "518880": 3600,
+        "513030": 17300
+      },
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 23.37,
+      "cash_left": 2978.91,
+      "nav": 116164.81
+    },
+    {
+      "date": "2026-09-04",
+      "weekday": "周五",
+      "shares": {
+        "511260": 200,
+        "511380": 100,
+        "512890": 35500,
+        "518880": 200,
+        "513030": 600,
+        "159980": 16800
+      },
+      "orders_executed": 5,
+      "fee_and_slip_rmb": 56.59,
+      "cash_left": 3539.31,
+      "nav": 114269.61
+    },
+    {
+      "date": "2026-09-11",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "511380": 100,
+        "512890": 32200,
+        "518880": 200,
+        "513030": 600
+      },
+      "orders_executed": 3,
+      "fee_and_slip_rmb": 32.77,
+      "cash_left": 3026.71,
+      "nav": 113899.81
+    },
+    {
+      "date": "2026-09-18",
+      "weekday": "周五",
+      "shares": {
+        "511260": 800,
+        "511380": 100,
+        "512890": 1500,
+        "518880": 100,
+        "513030": 200
+      },
+      "orders_executed": 4,
+      "fee_and_slip_rmb": 37.2,
+      "cash_left": 1191.33,
+      "nav": 113367.63
+    },
+    {
+      "date": "2026-10-09",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "511380": 100,
+        "512890": 32900,
+        "518880": 100,
+        "513030": 200
+      },
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 27.43,
+      "cash_left": 3682.04,
+      "nav": 113347.64
+    },
+    {
+      "date": "2026-10-23",
+      "weekday": "周五",
+      "shares": {
+        "511260": 800,
+        "511380": 100,
+        "512890": 1200,
+        "518880": 100,
+        "513030": 200
+      },
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 27.54,
+      "cash_left": 1121.61,
+      "nav": 113289.81
+    },
+    {
+      "date": "2026-10-30",
+      "weekday": "周五",
+      "shares": {
+        "511260": 500,
+        "511380": 100,
+        "512890": 31500,
+        "518880": 100,
+        "513030": 200
+      },
+      "orders_executed": 2,
+      "fee_and_slip_rmb": 27.39,
+      "cash_left": 4029.75,
+      "nav": 113245.05
+    },
+    {
+      "date": "2026-11-06",
+      "weekday": "周五",
+      "shares": {
+        "511260": 300,
+        "511380": 100,
+        "512890": 28500,
+        "518880": 100,
+        "513030": 18400
+      },
+      "orders_executed": 3,
+      "fee_and_slip_rmb": 27.77,
+      "cash_left": 2053.4,
+      "nav": 113488.3
+    }
+  ],
+  "latest_backtest_prev_top": [
+    "512890",
+    "513030"
   ]
 }
