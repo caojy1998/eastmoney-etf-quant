@@ -177,17 +177,49 @@ def render_html_dashboard():
     combo_ratio_label = live_data.get("combo_ratio_label", "40%全天候固收底座 + 60%跨资产动量轮动")
     util_pct = live_data["used_combo_cash"] / live_data["total_capital"] * 100.0
 
+    lp = live_data.get("live_performance", {})
+    init_prin = float(lp.get("initial_principal", live_data.get("initial_principal", 60000.0)))
+    live_eq = float(lp.get("total_equity", live_data["total_capital"]))
+    live_mv = float(lp.get("market_value", 0.0))
+    live_cash = float(lp.get("cash_balance", 0.0))
+    cum_prof = float(lp.get("cum_profit_rmb", 0.0))
+    cum_ret = float(lp.get("cum_return_pct", 0.0))
+    ann_ret = float(lp.get("annualized_return_pct", 0.0))
+    hs300_ret = float(lp.get("hs300_same_period_pct", 0.0))
+    alpha_ret = float(lp.get("excess_alpha_pct", 0.0))
+    cal_days = int(lp.get("calendar_days", 1))
+    trd_days = int(lp.get("trading_days", 1))
+    inv_start = lp.get("invest_start_date", "2026-11-09")
+    ann_note = lp.get("ann_note", "")
+
+    prof_col = "#34d399" if cum_prof >= 0 else "#f87171"
+    ann_col = "#fbbf24" if ann_ret >= 0 else "#f87171"
+    alpha_col = "#38bdf8" if alpha_ret >= 0 else "#f87171"
+
+    hold_rows_html = ""
+    for hb in lp.get("holding_breakdown", []):
+        hold_rows_html += (
+            f"<tr><td><b>{hb['code']}</b></td><td>{hb['name']}</td><td>{hb['shares']} 股</td>"
+            f"<td>{hb['latest_price']:.3f}</td><td><b>¥{hb['market_value']:,.2f}</b></td><td>{hb['weight_pct']:.1f}%</td></tr>\n"
+        )
+
     html = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>东方财富 {live_data['total_capital']/10000:.1f}万元场内ETF量化回测与实盘信号终端 (v2.0 严格实盘版)</title>
+<title>东方财富 {init_prin/10000:.1f}万元场内ETF量化回测与实盘信号终端 (v2.1 实盘收益追踪版)</title>
 <style>
   body {{ font-family: 'Microsoft YaHei', sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }}
   .container {{ max-width: 1340px; margin: 0 auto; }}
   h1 {{ font-size: 26px; margin-bottom: 6px; color: #38bdf8; }}
   .subtitle {{ color: #94a3b8; font-size: 14px; margin-bottom: 18px; line-height: 1.6; }}
-  .banner {{ background: {banner_bg}; border: 1px solid {banner_border}; color: {banner_text_col}; padding: 14px 18px; border-radius: 8px; margin-bottom: 22px; font-size: 15px; font-weight: bold; }}
+  .banner {{ background: {banner_bg}; border: 1px solid {banner_border}; color: {banner_text_col}; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 15px; font-weight: bold; }}
+  .live-box {{ background: linear-gradient(135deg, #172554 0%, #1e293b 100%); border: 1px solid #3b82f6; border-radius: 12px; padding: 20px; margin-bottom: 24px; }}
+  .live-kpis {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 12px; }}
+  .kpi {{ background: rgba(15, 23, 42, 0.72); border: 1px solid #334155; border-radius: 8px; padding: 14px 16px; }}
+  .kpi-label {{ color: #94a3b8; font-size: 13px; }}
+  .kpi-val {{ font-size: 26px; font-weight: bold; margin: 6px 0 4px 0; }}
+  .kpi-sub {{ color: #cbd5e1; font-size: 12px; }}
   .grid-cards {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }}
   .card {{ background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; }}
   .card h3 {{ margin: 0 0 10px 0; font-size: 17px; }}
@@ -205,13 +237,58 @@ def render_html_dashboard():
 </head>
 <body>
 <div class="container">
-  <h1>🚀 东方财富 {live_data['total_capital']/10000:.1f}万元本金 场内ETF量化回测与实盘信号终端 <span style="font-size:15px;color:#34d399;">(v2.0 零注水严格实盘引擎)</span></h1>
+  <h1>🚀 东方财富 {init_prin/10000:.1f}万元本金 场内ETF量化回测与实盘信号终端 <span style="font-size:15px;color:#34d399;">(v2.1 实盘净值与年化追踪版)</span></h1>
   <div class="subtitle">
     最新行情基准日：<b>{live_data['as_of_date']} ({live_data.get('as_of_weekday', '')})</b> ｜ 本次刷新时间：<b style="color:#34d399;">{live_data.get('generated_at', '')}</b> ｜ 上次同步持仓日：{live_data.get('last_sync_date', '未记录')}<br/>
     回测与实盘同源准则：<b>100股整手撮合(raw_close) + 东财万1.5不免5(最低5元/笔) + 万2滑点 + 自然周周五14:45调仓 + 0盘中网格注水</b>
   </div>
 
   <div class="banner">{live_data.get('timing_banner', '')}</div>
+
+  <div class="live-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+      <div style="font-size:19px;font-weight:bold;color:#f8fafc;">💼 我的东财实盘账户实时成绩单 <span style="font-size:14px;color:#93c5fd;font-weight:normal;">（建仓起始日：{inv_start} ｜ 已运行 {cal_days} 个自然日 / {trd_days} 个交易日）</span></div>
+      <div style="font-size:13px;color:#cbd5e1;">投入初始本金：<b>¥{init_prin:,.2f}</b></div>
+    </div>
+    <div class="live-kpis">
+      <div class="kpi">
+        <div class="kpi-label">当前实盘账户总资产</div>
+        <div class="kpi-val" style="color:#f8fafc;">¥{live_eq:,.2f}</div>
+        <div class="kpi-sub">证券市值 ¥{live_mv:,.1f} + 可用现金 ¥{live_cash:,.1f}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">实盘当前累计净收益</div>
+        <div class="kpi-val" style="color:{prof_col};">{cum_prof:+,.2f}元 <span style="font-size:17px;">({cum_ret:+.2f}%)</span></div>
+        <div class="kpi-sub">相比初始投入本金 ¥{init_prin:,.0f}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">实盘当前折合年化 (CAGR)</div>
+        <div class="kpi-val" style="color:{ann_col};">{ann_ret:+.2f}%</div>
+        <div class="kpi-sub">按 {cal_days} 天复利年化折算</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">建仓以来跑赢沪深300 (Alpha)</div>
+        <div class="kpi-val" style="color:{alpha_col};">{alpha_ret:+.2f}%</div>
+        <div class="kpi-sub">同期沪深300 (510300) 涨跌：{hs300_ret:+.2f}%</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:12.5px;color:#93c5fd;line-height:1.5;">
+      ℹ️ {ann_note}<br/>
+      💡 <b>对账提示</b>：若周中有过网格/手动买卖（例如卖出一笔德国ETF），只需打开 <code>my_holdings.json</code> 将对应 ETF 股数与 <code>cash_balance</code>（东财APP显示的【可用资金】）改为真实值，或在周五调仓后双击同步脚本时输入精确可用资金，即可分毫不差追踪真实收益！
+    </div>
+    <details style="margin-top:10px;">
+      <summary style="cursor:pointer;color:#60a5fa;font-size:13.5px;font-weight:bold;">📋 展开查看当前记录的实盘持仓市值构成明细</summary>
+      <table style="margin-top:8px;">
+        <thead>
+          <tr><th>ETF代码</th><th>ETF名称</th><th>当前记录持股</th><th>最新实盘价</th><th>当前持仓市值</th><th>占总资产比例</th></tr>
+        </thead>
+        <tbody>
+          {hold_rows_html}
+          <tr><td><b>CASH</b></td><td>账户可用现金 / 逆回购</td><td>-</td><td>1.000</td><td><b>¥{live_cash:,.2f}</b></td><td>{live_cash/live_eq*100.0 if live_eq>0 else 0:.1f}%</td></tr>
+        </tbody>
+      </table>
+    </details>
+  </div>
 
   <div class="grid-cards">
     <div class="card" style="border-top: 4px solid #34d399;">

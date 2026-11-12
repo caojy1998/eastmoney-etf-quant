@@ -2,13 +2,19 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>东方财富 6.0万元场内ETF量化回测与实盘信号终端 (v2.0 严格实盘版)</title>
+<title>东方财富 6.0万元场内ETF量化回测与实盘信号终端 (v2.1 实盘收益追踪版)</title>
 <style>
   body { font-family: 'Microsoft YaHei', sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }
   .container { max-width: 1340px; margin: 0 auto; }
   h1 { font-size: 26px; margin-bottom: 6px; color: #38bdf8; }
   .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 18px; line-height: 1.6; }
-  .banner { background: #3b2f13; border: 1px solid #f59e0b; color: #fde68a; padding: 14px 18px; border-radius: 8px; margin-bottom: 22px; font-size: 15px; font-weight: bold; }
+  .banner { background: #3b2f13; border: 1px solid #f59e0b; color: #fde68a; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 15px; font-weight: bold; }
+  .live-box { background: linear-gradient(135deg, #172554 0%, #1e293b 100%); border: 1px solid #3b82f6; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .live-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 12px; }
+  .kpi { background: rgba(15, 23, 42, 0.72); border: 1px solid #334155; border-radius: 8px; padding: 14px 16px; }
+  .kpi-label { color: #94a3b8; font-size: 13px; }
+  .kpi-val { font-size: 26px; font-weight: bold; margin: 6px 0 4px 0; }
+  .kpi-sub { color: #cbd5e1; font-size: 12px; }
   .grid-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
   .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; }
   .card h3 { margin: 0 0 10px 0; font-size: 17px; }
@@ -26,37 +32,87 @@
 </head>
 <body>
 <div class="container">
-  <h1>🚀 东方财富 6.0万元本金 场内ETF量化回测与实盘信号终端 <span style="font-size:15px;color:#34d399;">(v2.0 零注水严格实盘引擎)</span></h1>
+  <h1>🚀 东方财富 6.0万元本金 场内ETF量化回测与实盘信号终端 <span style="font-size:15px;color:#34d399;">(v2.1 实盘净值与年化追踪版)</span></h1>
   <div class="subtitle">
-    最新行情基准日：<b>2026-11-11 (周三)</b> ｜ 本次刷新时间：<b style="color:#34d399;">2026-11-12 01:52:04</b> ｜ 上次同步持仓日：2026-11-09<br/>
+    最新行情基准日：<b>2026-11-12 (周四)</b> ｜ 本次刷新时间：<b style="color:#34d399;">2026-11-12 23:09:39</b> ｜ 上次同步持仓日：2026-11-09<br/>
     回测与实盘同源准则：<b>100股整手撮合(raw_close) + 东财万1.5不免5(最低5元/笔) + 万2滑点 + 自然周周五14:45调仓 + 0盘中网格注水</b>
   </div>
 
-  <div class="banner">🕒 当前行情基准日 2026-11-11 为【周三（非周五调仓日）】—— 下方差额单仅供盘后预览！请严格等到【本周五 14:45】重新运行脚本后再执行实盘买卖，周中切勿提前调仓（防假突破打脸与5元最低佣金磨损）。</div>
+  <div class="banner">🕒 当前行情基准日 2026-11-12 为【周四（非周五调仓日）】—— 下方差额单仅供盘后预览！请严格等到【本周五 14:45】重新运行脚本后再执行实盘买卖，周中切勿提前调仓（防假突破打脸与5元最低佣金磨损）。</div>
+
+  <div class="live-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+      <div style="font-size:19px;font-weight:bold;color:#f8fafc;">💼 我的东财实盘账户实时成绩单 <span style="font-size:14px;color:#93c5fd;font-weight:normal;">（建仓起始日：2026-11-09 ｜ 已运行 3 个自然日 / 3 个交易日）</span></div>
+      <div style="font-size:13px;color:#cbd5e1;">投入初始本金：<b>¥60,000.00</b></div>
+    </div>
+    <div class="live-kpis">
+      <div class="kpi">
+        <div class="kpi-label">当前实盘账户总资产</div>
+        <div class="kpi-val" style="color:#f8fafc;">¥60,337.70</div>
+        <div class="kpi-sub">证券市值 ¥57,287.9 + 可用现金 ¥3,049.8</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">实盘当前累计净收益</div>
+        <div class="kpi-val" style="color:#34d399;">+337.70元 <span style="font-size:17px;">(+0.56%)</span></div>
+        <div class="kpi-sub">相比初始投入本金 ¥60,000</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">实盘当前折合年化 (CAGR)</div>
+        <div class="kpi-val" style="color:#fbbf24;">+98.05%</div>
+        <div class="kpi-sub">按 3 天复利年化折算</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">建仓以来跑赢沪深300 (Alpha)</div>
+        <div class="kpi-val" style="color:#38bdf8;">+0.95%</div>
+        <div class="kpi-sub">同期沪深300 (510300) 涨跌：-0.39%</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:12.5px;color:#93c5fd;line-height:1.5;">
+      ℹ️ 实盘已运行 3 个自然日（3 个交易日）；建仓初期天数较短，单周微小涨跌在折算年化时会被显著放大（线性折算约 +68.18%），运行满 1~3 个月后年化指标将趋于稳健。<br/>
+      💡 <b>对账提示</b>：若周中有过网格/手动买卖（例如卖出一笔德国ETF），只需打开 <code>my_holdings.json</code> 将对应 ETF 股数与 <code>cash_balance</code>（东财APP显示的【可用资金】）改为真实值，或在周五调仓后双击同步脚本时输入精确可用资金，即可分毫不差追踪真实收益！
+    </div>
+    <details style="margin-top:10px;">
+      <summary style="cursor:pointer;color:#60a5fa;font-size:13.5px;font-weight:bold;">📋 展开查看当前记录的实盘持仓市值构成明细</summary>
+      <table style="margin-top:8px;">
+        <thead>
+          <tr><th>ETF代码</th><th>ETF名称</th><th>当前记录持股</th><th>最新实盘价</th><th>当前持仓市值</th><th>占总资产比例</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>511260</b></td><td>十年国债ETF</td><td>200 股</td><td>135.969</td><td><b>¥27,193.80</b></td><td>45.1%</td></tr>
+<tr><td><b>512890</b></td><td>红利低波ETF</td><td>11300 股</td><td>1.229</td><td><b>¥13,887.70</b></td><td>23.0%</td></tr>
+<tr><td><b>513030</b></td><td>德国ETF</td><td>7100 股</td><td>1.876</td><td><b>¥13,319.60</b></td><td>22.1%</td></tr>
+<tr><td><b>518880</b></td><td>黄金ETF</td><td>200 股</td><td>8.085</td><td><b>¥1,617.00</b></td><td>2.7%</td></tr>
+<tr><td><b>511380</b></td><td>可转债ETF</td><td>100 股</td><td>12.698</td><td><b>¥1,269.80</b></td><td>2.1%</td></tr>
+
+          <tr><td><b>CASH</b></td><td>账户可用现金 / 逆回购</td><td>-</td><td>1.000</td><td><b>¥3,049.80</b></td><td>5.1%</td></tr>
+        </tbody>
+      </table>
+    </details>
+  </div>
 
   <div class="grid-cards">
     <div class="card" style="border-top: 4px solid #34d399;">
       <h3 class="green">🛡️ 策略一：全天候“超级固收+”低波底座</h3>
-      <div class="big-num green">¥79,228 <span style="font-size:16px;">(+32.05%)</span></div>
-      <div>年化收益：<b>4.87%</b> ｜ 最大回撤：<b>-1.95%</b> ｜ 卡玛：<b>2.49</b></div>
+      <div class="big-num green">¥79,200 <span style="font-size:16px;">(+32.0%)</span></div>
+      <div>年化收益：<b>4.86%</b> ｜ 最大回撤：<b>-1.95%</b> ｜ 卡玛：<b>2.49</b></div>
       <div style="color:#94a3b8;font-size:13px;margin-top:6px;">6年累计佣金 ¥1,624 (297笔)，连续6年全部正收益！</div>
     </div>
     <div class="card" style="border-top: 4px solid #fb923c;">
       <h3 class="orange">🔥 策略二：跨资产多维动量轮动 + 双债避险</h3>
-      <div class="big-num orange">¥142,042 <span style="font-size:16px;">(+136.74%)</span></div>
-      <div>年化收益：<b>15.87%</b> ｜ 最大回撤：<b>-11.13%</b> ｜ 夏普：<b>1.0</b></div>
+      <div class="big-num orange">¥143,177 <span style="font-size:16px;">(+138.63%)</span></div>
+      <div>年化收益：<b>16.02%</b> ｜ 最大回撤：<b>-11.13%</b> ｜ 夏普：<b>1.01</b></div>
       <div style="color:#94a3b8;font-size:13px;margin-top:6px;">含创业板(159915)与有色(159980) + Top-3 缓冲，6年年年正收益！</div>
     </div>
     <div class="card" style="border-top: 4px solid #38bdf8;">
       <h3 class="blue">⭐ 推荐组合：40%全天候固收底座 + 60%跨资产动量轮动</h3>
-      <div class="big-num blue">¥113,943 <span style="font-size:16px;">(+89.9%)</span></div>
-      <div>年化收益：<b>11.59%</b> ｜ 最大回撤：<b>-7.82%</b> ｜ 夏普：<b>1.09</b></div>
+      <div class="big-num blue">¥114,468 <span style="font-size:16px;">(+90.78%)</span></div>
+      <div>年化收益：<b>11.67%</b> ｜ 最大回撤：<b>-7.82%</b> ｜ 夏普：<b>1.1</b></div>
       <div style="color:#94a3b8;font-size:13px;margin-top:6px;">单一6万实盘账户动态配平（扣尽整手零头与5元低消），回撤严控8%内！</div>
     </div>
   </div>
 
   <div class="section">
-    <h2>📌 一、今日东方财富 60,000 元实盘【先卖后买】差额执行清单（真实资金利用率 98.1%，预留零钱 ¥1,123.8）</h2>
+    <h2>📌 一、今日东方财富 60,338 元实盘【先卖后买】差额执行清单（真实资金利用率 98.1%，预留零钱 ¥1,147.1）</h2>
     <h3 style="color:#38bdf8;font-size:16px;margin-top:8px;">⭐ 推荐二合一（40%全天候固收底座 + 60%跨资产动量轮动）差额执行表（每周五 14:45 按此表操作）：</h3>
     <table>
       <thead>
@@ -65,35 +121,35 @@
       <tbody>
         <tr>
           <td style="color:#f87171;font-weight:bold;">🔴 第一步：卖出减仓</td>
-          <td><b>511260</b></td><td>十年国债ETF</td><td>135.913</td>
+          <td><b>511260</b></td><td>十年国债ETF</td><td>135.969</td>
           <td>200 股</td><td><b>100 股</b></td>
           <td style="color:#f87171;font-weight:bold;">100 股 (1手)</td>
-          <td>¥13,591.3</td>
+          <td>¥13,596.9</td>
         </tr>
         <tr>
           <td style="color:#f87171;font-weight:bold;">🔴 第一步：卖出减仓</td>
-          <td><b>518880</b></td><td>黄金ETF</td><td>8.289</td>
+          <td><b>518880</b></td><td>黄金ETF</td><td>8.085</td>
           <td>200 股</td><td><b>100 股</b></td>
           <td style="color:#f87171;font-weight:bold;">100 股 (1手)</td>
-          <td>¥828.9</td>
+          <td>¥808.5</td>
         </tr>
         <tr>
           <td style="color:#34d399;font-weight:bold;">🟢 第二步：买入加仓</td>
-          <td><b>512890</b></td><td>红利低波ETF</td><td>1.23</td>
-          <td>11300 股</td><td><b>18300 股</b></td>
-          <td style="color:#34d399;font-weight:bold;">7000 股 (70手)</td>
-          <td>¥8,610.0</td>
+          <td><b>512890</b></td><td>红利低波ETF</td><td>1.229</td>
+          <td>11300 股</td><td><b>18600 股</b></td>
+          <td style="color:#34d399;font-weight:bold;">7300 股 (73手)</td>
+          <td>¥8,971.7</td>
         </tr>
         <tr>
           <td style="color:#34d399;font-weight:bold;">🟢 第二步：买入加仓</td>
-          <td><b>513030</b></td><td>德国ETF</td><td>1.845</td>
-          <td>7100 股</td><td><b>11200 股</b></td>
-          <td style="color:#34d399;font-weight:bold;">4100 股 (41手)</td>
-          <td>¥7,564.5</td>
+          <td><b>513030</b></td><td>德国ETF</td><td>1.876</td>
+          <td>7100 股</td><td><b>11000 股</b></td>
+          <td style="color:#34d399;font-weight:bold;">3900 股 (39手)</td>
+          <td>¥7,316.4</td>
         </tr>
         <tr>
           <td style="color:#94a3b8;font-weight:bold;">⚪ 保持不动</td>
-          <td><b>511380</b></td><td>可转债ETF</td><td>12.83</td>
+          <td><b>511380</b></td><td>可转债ETF</td><td>12.698</td>
           <td>100 股</td><td><b>100 股</b></td>
           <td style="color:#94a3b8;font-weight:bold;">0 股 (0手)</td>
           <td>¥0.0</td>
@@ -108,57 +164,57 @@
       </thead>
       <tbody>
         <tr>
-          <td><b>513030</b></td><td>德国ETF</td><td>1.845</td>
-          <td style="color:#f87171;">+4.89%</td>
-          <td style="color:#f87171;">+3.02%</td>
-          <td>21.0%</td><td>是</td>
-          <td style="color:#cbd5e1;font-size:13px;">+1.57 / +0.46 / +0.00</td>
-          <td><b>+0.676</b></td><td>3.224</td>
+          <td><b>513030</b></td><td>德国ETF</td><td>1.876</td>
+          <td style="color:#f87171;">+7.63%</td>
+          <td style="color:#f87171;">+1.68%</td>
+          <td>21.1%</td><td>是</td>
+          <td style="color:#cbd5e1;font-size:13px;">+1.88 / +0.69 / +0.02</td>
+          <td><b>+0.881</b></td><td>4.178</td>
           <td style="color:#34d399;font-weight:bold;">✅ 主力入选(Top2)</td>
         </tr>
         <tr>
-          <td><b>512890</b></td><td>红利低波ETF</td><td>1.23</td>
-          <td style="color:#34d399;">-0.08%</td>
-          <td style="color:#34d399;">-0.16%</td>
-          <td>14.0%</td><td>是</td>
-          <td style="color:#cbd5e1;font-size:13px;">+0.00 / +0.07 / +0.25</td>
-          <td><b>+0.092</b></td><td>0.658</td>
-          <td style="color:#34d399;font-weight:bold;">✅ 主力入选(Top2)</td>
+          <td><b>511380</b></td><td>可转债ETF</td><td>12.698</td>
+          <td style="color:#f87171;">+2.41%</td>
+          <td style="color:#34d399;">-0.63%</td>
+          <td>19.2%</td><td>是</td>
+          <td style="color:#cbd5e1;font-size:13px;">+0.72 / +0.02 / -0.08</td>
+          <td><b>+0.205</b></td><td>1.069</td>
+          <td style="color:#fbbf24;font-weight:bold;">🟡 备选观察(第2名)</td>
         </tr>
         <tr>
-          <td><b>511380</b></td><td>可转债ETF</td><td>12.83</td>
-          <td style="color:#f87171;">+1.55%</td>
-          <td style="color:#f87171;">+2.32%</td>
-          <td>20.1%</td><td>是</td>
-          <td style="color:#cbd5e1;font-size:13px;">+0.24 / +0.01 / -0.12</td>
-          <td><b>+0.046</b></td><td>0.228</td>
-          <td style="color:#fbbf24;font-weight:bold;">🟡 备选观察(第3名)</td>
+          <td><b>512890</b></td><td>红利低波ETF</td><td>1.229</td>
+          <td style="color:#f87171;">+1.40%</td>
+          <td style="color:#f87171;">+0.66%</td>
+          <td>12.8%</td><td>是</td>
+          <td style="color:#cbd5e1;font-size:13px;">-0.02 / +0.09 / +0.21</td>
+          <td><b>+0.088</b></td><td>0.690</td>
+          <td style="color:#34d399;font-weight:bold;">🟢 持仓缓冲留存(Top3)</td>
         </tr>
         <tr>
-          <td><b>518880</b></td><td>黄金ETF</td><td>8.289</td>
-          <td style="color:#34d399;">-2.49%</td>
-          <td style="color:#f87171;">+0.73%</td>
-          <td>21.8%</td><td>否(破位)</td>
-          <td style="color:#cbd5e1;font-size:13px;">+0.36 / -0.07 / -0.27</td>
-          <td><b>+0.010</b></td><td>-</td>
+          <td><b>518880</b></td><td>黄金ETF</td><td>8.085</td>
+          <td style="color:#34d399;">-4.57%</td>
+          <td style="color:#34d399;">-3.98%</td>
+          <td>23.3%</td><td>否(破位)</td>
+          <td style="color:#cbd5e1;font-size:13px;">+0.14 / -0.07 / -0.26</td>
+          <td><b>-0.054</b></td><td>-</td>
           <td style="color:#94a3b8;font-weight:bold;">🛡️ 破位/避险剔除</td>
         </tr>
         <tr>
-          <td><b>159980</b></td><td>有色ETF</td><td>2.056</td>
-          <td style="color:#34d399;">-3.43%</td>
-          <td style="color:#34d399;">-0.44%</td>
-          <td>13.9%</td><td>否(破位)</td>
-          <td style="color:#cbd5e1;font-size:13px;">-0.50 / -0.21 / -0.31</td>
-          <td><b>-0.322</b></td><td>-</td>
+          <td><b>159980</b></td><td>有色ETF</td><td>2.037</td>
+          <td style="color:#34d399;">-2.68%</td>
+          <td style="color:#34d399;">-2.21%</td>
+          <td>13.1%</td><td>否(破位)</td>
+          <td style="color:#cbd5e1;font-size:13px;">-0.45 / -0.23 / -0.31</td>
+          <td><b>-0.314</b></td><td>-</td>
           <td style="color:#94a3b8;font-weight:bold;">🛡️ 破位/避险剔除</td>
         </tr>
         <tr>
-          <td><b>159915</b></td><td>创业板ETF</td><td>2.59</td>
-          <td style="color:#34d399;">-10.41%</td>
-          <td style="color:#f87171;">+1.13%</td>
-          <td>49.8%</td><td>否(破位)</td>
-          <td style="color:#cbd5e1;font-size:13px;">-0.00 / -0.55 / -0.83</td>
-          <td><b>-0.456</b></td><td>-</td>
+          <td><b>159915</b></td><td>创业板ETF</td><td>2.524</td>
+          <td style="color:#34d399;">-10.05%</td>
+          <td style="color:#34d399;">-2.32%</td>
+          <td>49.6%</td><td>否(破位)</td>
+          <td style="color:#cbd5e1;font-size:13px;">+0.13 / -0.47 / -0.79</td>
+          <td><b>-0.369</b></td><td>-</td>
           <td style="color:#94a3b8;font-weight:bold;">🛡️ 破位/避险剔除</td>
         </tr>
       </tbody>
@@ -172,29 +228,29 @@
         </thead>
         <tbody>
           <tr>
-            <td><b>511260</b></td><td>十年国债ETF</td><td>135.913</td>
-            <td>78.5%</td><td style="color:#34d399;font-weight:bold;">300 股 (3手)</td>
-            <td>¥40,773.9</td><td style="text-align:left;color:#94a3b8;">长久期国债，股市大跌时的避险安全屋</td>
+            <td><b>511260</b></td><td>十年国债ETF</td><td>135.969</td>
+            <td>77.6%</td><td style="color:#34d399;font-weight:bold;">300 股 (3手)</td>
+            <td>¥40,790.7</td><td style="text-align:left;color:#94a3b8;">长久期国债，股市大跌时的避险安全屋</td>
           </tr>
           <tr>
-            <td><b>512890</b></td><td>红利低波ETF</td><td>1.23</td>
-            <td>10.1%</td><td style="color:#34d399;font-weight:bold;">7000 股 (70手)</td>
-            <td>¥8,610.0</td><td style="text-align:left;color:#94a3b8;">高股息+低波动，熊市抗跌、长期复利核心</td>
+            <td><b>512890</b></td><td>红利低波ETF</td><td>1.229</td>
+            <td>10.9%</td><td style="color:#34d399;font-weight:bold;">7400 股 (74手)</td>
+            <td>¥9,094.6</td><td style="text-align:left;color:#94a3b8;">高股息+低波动，熊市抗跌、长期复利核心</td>
           </tr>
           <tr>
-            <td><b>511380</b></td><td>可转债ETF</td><td>12.83</td>
-            <td>6.2%</td><td style="color:#34d399;font-weight:bold;">400 股 (4手)</td>
-            <td>¥5,132.0</td><td style="text-align:left;color:#94a3b8;">免10万权限门槛的一篮子可转债，进可攻退可守</td>
+            <td><b>511380</b></td><td>可转债ETF</td><td>12.698</td>
+            <td>6.5%</td><td style="color:#34d399;font-weight:bold;">400 股 (4手)</td>
+            <td>¥5,079.2</td><td style="text-align:left;color:#94a3b8;">免10万权限门槛的一篮子可转债，进可攻退可守</td>
           </tr>
           <tr>
-            <td><b>513030</b></td><td>德国ETF</td><td>1.845</td>
-            <td>3.0%</td><td style="color:#34d399;font-weight:bold;">1400 股 (14手)</td>
-            <td>¥2,583.0</td><td style="text-align:left;color:#94a3b8;">T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价</td>
+            <td><b>513030</b></td><td>德国ETF</td><td>1.876</td>
+            <td>2.9%</td><td style="color:#34d399;font-weight:bold;">1300 股 (13手)</td>
+            <td>¥2,438.8</td><td style="text-align:left;color:#94a3b8;">T+0欧洲股市龙头DAX指数，跨国别分散且常年近0溢价</td>
           </tr>
           <tr>
-            <td><b>518880</b></td><td>黄金ETF</td><td>8.289</td>
-            <td>2.3%</td><td style="color:#34d399;font-weight:bold;">200 股 (2手)</td>
-            <td>¥1,657.8</td><td style="text-align:left;color:#94a3b8;">T+0抗通胀避险资产，与A股低相关</td>
+            <td><b>518880</b></td><td>黄金ETF</td><td>8.085</td>
+            <td>2.1%</td><td style="color:#34d399;font-weight:bold;">200 股 (2手)</td>
+            <td>¥1,617.0</td><td style="text-align:left;color:#94a3b8;">T+0抗通胀避险资产，与A股低相关</td>
           </tr>
         </tbody>
       </table>
@@ -202,7 +258,7 @@
   </div>
 
   <div class="section">
-    <h2>📊 二、2021 ~ 2026 严格实盘级历史回测核心指标与分年度净收益（本金：60,000元 | 100股整手 + 不免5最低5元佣金）</h2>
+    <h2>📊 二、2021 ~ 2026 严格实盘级历史回测核心指标与分年度净收益（本金：60,338元 | 100股整手 + 不免5最低5元佣金）</h2>
     <table>
       <thead>
         <tr>
@@ -213,9 +269,9 @@
       <tbody>
         <tr>
           <td style="text-align:left;font-weight:bold;">策略一：全天候“超级固收+”底座 (实盘整手·不免5)</td>
-          <td>¥79,228</td>
-          <td style="color:#34d399;">+¥19,228</td>
-          <td><b>4.87%</b></td>
+          <td>¥79,200</td>
+          <td style="color:#34d399;">+¥19,200</td>
+          <td><b>4.86%</b></td>
           <td style="color:#fca5a5;">-1.95%</td>
           <td>1.1</td>
           <td style="color:#cbd5e1;font-size:13px;">¥1,624 (297笔)</td>
@@ -224,82 +280,82 @@
           <td>+5.08%</td>
           <td>+9.42%</td>
           <td>+6.23%</td>
-          <td>+1.97%</td>
+          <td>+1.93%</td>
         </tr>
         <tr>
           <td style="text-align:left;font-weight:bold;">策略二：跨资产多维动量轮动 (实盘整手·不免5)</td>
-          <td>¥142,042</td>
-          <td style="color:#34d399;">+¥82,042</td>
-          <td><b>15.87%</b></td>
+          <td>¥143,177</td>
+          <td style="color:#34d399;">+¥83,177</td>
+          <td><b>16.02%</b></td>
           <td style="color:#fca5a5;">-11.13%</td>
-          <td>1.0</td>
+          <td>1.01</td>
           <td style="color:#cbd5e1;font-size:13px;">¥3,116 (468笔)</td>
           <td>+13.85%</td>
           <td>+17.98%</td>
           <td>+0.99%</td>
           <td>+8.89%</td>
           <td>+48.62%</td>
-          <td>+7.83%</td>
+          <td>+8.70%</td>
         </tr>
         <tr>
           <td style="text-align:left;font-weight:bold;">推荐组合：40%全天候底座 + 60%跨资产动量 (实盘整手·不免5)</td>
-          <td>¥113,943</td>
-          <td style="color:#34d399;">+¥53,943</td>
-          <td><b>11.59%</b></td>
+          <td>¥114,468</td>
+          <td style="color:#34d399;">+¥54,468</td>
+          <td><b>11.67%</b></td>
           <td style="color:#fca5a5;">-7.82%</td>
-          <td>1.09</td>
+          <td>1.1</td>
           <td style="color:#cbd5e1;font-size:13px;">¥3,338 (649笔)</td>
           <td>+11.90%</td>
           <td>+10.14%</td>
           <td>+2.20%</td>
           <td>+9.54%</td>
           <td>+29.89%</td>
-          <td>+5.97%</td>
+          <td>+6.46%</td>
         </tr>
         <tr>
           <td style="text-align:left;font-weight:bold;">基准A：纯十年国债ETF (511260) 持有</td>
-          <td>¥77,938</td>
-          <td style="color:#34d399;">+¥17,938</td>
-          <td><b>4.57%</b></td>
+          <td>¥77,971</td>
+          <td style="color:#34d399;">+¥17,971</td>
+          <td><b>4.58%</b></td>
           <td style="color:#fca5a5;">-2.27%</td>
-          <td>1.17</td>
+          <td>1.18</td>
           <td style="color:#cbd5e1;font-size:13px;">-</td>
           <td>+5.88%</td>
           <td>+2.83%</td>
           <td>+4.54%</td>
           <td>+9.28%</td>
           <td>+0.36%</td>
-          <td>+4.06%</td>
+          <td>+4.10%</td>
         </tr>
         <tr>
           <td style="text-align:left;font-weight:bold;">基准B：传统银行固收理财 (2.8%年化)</td>
-          <td>¥70,521</td>
-          <td style="color:#34d399;">+¥10,521</td>
+          <td>¥70,527</td>
+          <td style="color:#34d399;">+¥10,527</td>
           <td><b>2.8%</b></td>
           <td style="color:#fca5a5;">0.0%</td>
-          <td>5.75</td>
+          <td>5.76</td>
           <td style="color:#cbd5e1;font-size:13px;">-</td>
           <td>+2.77%</td>
           <td>+2.79%</td>
           <td>+2.79%</td>
           <td>+2.82%</td>
           <td>+2.80%</td>
-          <td>+2.41%</td>
+          <td>+2.42%</td>
         </tr>
         <tr>
           <td style="text-align:left;font-weight:bold;">基准C：沪深300ETF (510300) 买入死拿</td>
-          <td>¥51,414</td>
-          <td style="color:#f87171;">¥-8,586</td>
-          <td><b>-2.6%</b></td>
+          <td>¥50,968</td>
+          <td style="color:#f87171;">¥-9,032</td>
+          <td><b>-2.75%</b></td>
           <td style="color:#fca5a5;">-44.75%</td>
-          <td>-0.24</td>
+          <td>-0.25</td>
           <td style="color:#cbd5e1;font-size:13px;">-</td>
           <td>-5.24%</td>
           <td>-21.68%</td>
           <td>-10.43%</td>
           <td>+18.39%</td>
           <td>+21.49%</td>
-          <td>-10.37%</td>
+          <td>-11.14%</td>
         </tr>
       </tbody>
     </table>
@@ -377,7 +433,7 @@
         <tr>
           <td style="font-weight:bold;color:#38bdf8;">① 盘中网格条件单管控</td>
           <td style="font-weight:bold;color:#34d399;">🚫 已全面停用（实测提效 +1.36%/年）</td>
-          <td style="text-align:left;color:#cbd5e1;line-height:1.55;">严格路径回测证实：在动量趋势组合上叠加盘中网格会过早卖飞主升浪牛股、下跌破位前逆势接刀，且占用 5.5% 闲置现金。请在东财APP【条件单 -> 我的条件单】中暂停/删除此前设置的网格单，释放资金吃满趋势复利！</td>
+          <td style="text-align:left;color:#cbd5e1;line-height:1.55;">严格状态机回测证实：在动量趋势组合上叠加盘中网格会过早卖飞主升浪牛股（正如本周二德国ETF被网格过早卖出一笔，错失周四涨至1.876的后半段涨幅）。请确保东财APP【条件单 -> 我的条件单】中的网格单已暂停/删除！</td>
         </tr>
         <tr>
           <td style="font-weight:bold;color:#38bdf8;">② 双债利率风险保护伞</td>
@@ -391,8 +447,8 @@
         </tr>
         <tr>
           <td style="font-weight:bold;color:#38bdf8;">④ 不免5防微调锁 & 零钱增值</td>
-          <td style="font-weight:bold;color:#34d399;">💰 免操作阈值 ¥2,400 ｜ 预留零钱 ¥1,124</td>
-          <td style="text-align:left;color:#cbd5e1;line-height:1.55;">单品种调仓差额低于总本金 4.0% (¥2,400) 自动跳过免交 5 元最低佣金；账面剩余约 ¥1,124 零钱可在东财收盘前顺手参与 1 天期国债逆回购 (GC001/R-001)。</td>
+          <td style="font-weight:bold;color:#34d399;">💰 免操作阈值 ¥2,414 ｜ 调仓后预留现金 ¥1,147</td>
+          <td style="text-align:left;color:#cbd5e1;line-height:1.55;">单品种调仓差额低于总资产 4.0% (¥2,414) 自动跳过免交 5 元最低佣金；预计本次调仓券商佣金合计约 ¥20.0 元。</td>
         </tr>
       </tbody>
     </table>
@@ -400,7 +456,7 @@
 
   <div class="section">
     <h2>🌍 四、主力 ETF 实时 IOPV 折溢价防雷监控（德国 / 有色 / 创业板 vs 纳指高溢价对照）</h2>
-    <p style="color:#34d399;font-size:14px;font-weight:bold;">✅ 海外主力【513030 德国ETF】实时溢价率仅 +2.40%（现价 1.845 vs IOPV 1.8017）；159980 有色ETF (-0.38%)、159915 创业板ETF (-0.01%) 同样处于零溢价/折价安全区，对比纳指ETF 513100 的 +20.35% 高溢价省下超 15% 溢价成本，可放心按信号执行！</p>
+    <p style="color:#34d399;font-size:14px;font-weight:bold;">🟡 海外主力【513030 德国ETF】现价 1.876（日内静态IOPV 1.8177，表观溢价 +3.21%）。因欧洲股市16:00后才开盘，日内IOPV存在跨时区滞后；您目前已持有底仓且未超 5.5% 持仓极限线，继续安心持有，免除无效换仓磨损！</p>
     <table>
       <thead>
         <tr><th>排序</th><th>ETF代码</th><th>ETF名称</th><th>场内最新价</th><th>IOPV参考净值</th><th>实时折溢价率</th><th>风控状态与操作建议</th></tr>
@@ -408,38 +464,38 @@
       <tbody>
         <tr>
           <td>#1</td><td><b>159980</b></td><td>大成有色ETF(商品主力)</td>
-          <td>2.056</td><td>2.0639</td>
-          <td style="color:#34d399;font-weight:bold;">-0.38%</td>
+          <td>2.037</td><td>2.0408</td>
+          <td style="color:#34d399;font-weight:bold;">-0.19%</td>
           <td style="color:#34d399;">⭐ 核心策略池成员(零溢价/折价安全区)</td>
         </tr>
         <tr>
           <td>#2</td><td><b>159915</b></td><td>易方达创业板ETF(成长主力)</td>
-          <td>2.590</td><td>2.5903</td>
-          <td style="color:#34d399;font-weight:bold;">-0.01%</td>
+          <td>2.524</td><td>2.5259</td>
+          <td style="color:#34d399;font-weight:bold;">-0.08%</td>
           <td style="color:#34d399;">⭐ 核心策略池成员(零溢价/折价安全区)</td>
         </tr>
         <tr>
           <td>#3</td><td><b>513630</b></td><td>港股红利低波ETF(备用观察)</td>
-          <td>1.613</td><td>1.6061</td>
-          <td style="color:#cbd5e1;font-weight:bold;">+0.43%</td>
+          <td>1.595</td><td>1.5950</td>
+          <td style="color:#cbd5e1;font-weight:bold;">+0.00%</td>
           <td style="color:#cbd5e1;">✅ 溢价安全(备用对照)</td>
         </tr>
         <tr>
           <td>#4</td><td><b>513030</b></td><td>华安德国ETF(海外主力)</td>
-          <td>1.845</td><td>1.8017</td>
-          <td style="color:#34d399;font-weight:bold;">+2.40%</td>
-          <td style="color:#34d399;">⭐ 核心策略池成员(零溢价/折价安全区)</td>
+          <td>1.876</td><td>1.8177</td>
+          <td style="color:#fb923c;font-weight:bold;">+3.21%</td>
+          <td style="color:#fb923c;">⚠️ 溢价超2.8%新买线(空仓禁追高/底仓观察)</td>
         </tr>
         <tr>
           <td>#5</td><td><b>513400</b></td><td>鹏华道琼斯ETF(美股对照)</td>
-          <td>1.329</td><td>1.2764</td>
-          <td style="color:#fb923c;font-weight:bold;">+4.12%</td>
+          <td>1.324</td><td>1.2827</td>
+          <td style="color:#fb923c;font-weight:bold;">+3.22%</td>
           <td style="color:#fb923c;">⚠️ 溢价超2.8%新买线(空仓禁追高/底仓观察)</td>
         </tr>
         <tr>
           <td>#6</td><td><b>513100</b></td><td>国泰纳指ETF(高溢价防雷对照)</td>
-          <td>2.233</td><td>1.8554</td>
-          <td style="color:#f87171;font-weight:bold;">+20.35%</td>
+          <td>2.218</td><td>1.8990</td>
+          <td style="color:#f87171;font-weight:bold;">+16.80%</td>
           <td style="color:#f87171;">🚨 极高溢价(已彻底弃用防雷)</td>
         </tr>
       </tbody>

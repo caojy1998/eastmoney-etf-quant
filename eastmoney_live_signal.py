@@ -1,11 +1,13 @@
 """
-东方财富 6万元本金 实盘挂单指令生成器 (v2.0 严格零注水实盘同源版)
+东方财富 6万元本金 实盘挂单指令与实时账户收益追踪生成器 (v2.1 含实盘累计收益 & 折合年化面板)
 与 backtest_engine.py 100% 共享同一套权重引擎、多周期动量打分、Top-3 排名缓冲、双债利率保护与整手分配器：
-  1. 策略一（全天候“超级固收+”低波底座）：风险平价 + 双均线减仓 + 511260/511360 双债利率保护伞
-  2. 策略二（跨资产多维动量轮动）：6大零溢价资产 (含 159915 创业板ETF & 159980 有色ETF) 10/20/30日 OLS×R² + Top-3 缓冲防换手
-  3. 推荐组合（40%全天候底座 + 60%跨资产动量）：取消盘中负收益网格，资金利用率提升至 ~98.5%，输出【先卖后买】差额执行表
+  1. 实时核算【我的东财实盘账户成绩单】：当前总资产、持仓市值、可用现金、累计净收益、累计收益率、折合年化收益率及跑赢沪深300超额 Alpha
+  2. 策略一（全天候“超级固收+”低波底座）：风险平价 + 双均线减仓 + 511260/511360 双债利率保护伞
+  3. 策略二（跨资产多维动量轮动）：6大零溢价资产 (含 159915 创业板ETF & 159980 有色ETF) 10/20/30日 OLS×R² + Top-3 缓冲防换手
+  4. 推荐组合（40%全天候底座 + 60%跨资产动量）：按当前账户真实总净值自动复利配平，输出【先卖后买】差额执行表
 """
 import json
+import math
 import sys
 from pathlib import Path
 import numpy as np
@@ -15,6 +17,8 @@ from backtest_engine import (
     ALL_TRADABLE_CODES,
     COMBO_S1_WEIGHT,
     COMBO_S2_WEIGHT,
+    COMMISSION_RATE,
+    MIN_COMMISSION_RMB,
     MIN_REBALANCE_RATIO,
     RESERVE_CASH_RATIO,
     RISK_UNIVERSE,
@@ -33,6 +37,12 @@ if hasattr(sys.stdout, "reconfigure"):
 BASE_DIR = Path(__file__).parent
 OUTPUT_DIR = BASE_DIR / "output"
 HOLDINGS_PATH = BASE_DIR / "my_holdings.json"
+
+
+def calc_single_order_comm(trade_amt: float) -> float:
+    if trade_amt <= 1e-6:
+        return 0.0
+    return round(max(MIN_COMMISSION_RMB, trade_amt * COMMISSION_RATE), 2)
 
 
 def build_order_sheet_from_weights(
@@ -65,21 +75,7 @@ def build_order_sheet_from_weights(
     return orders
 
 
-def generate_live_signals(total_capital: float = 60000.0) -> dict:
-    # 1. 先读取用户当前东方财富实盘持仓与预算 (my_holdings.json)
-    current_pos: dict[str, int] = {}
-    last_sync_date = ""
-    if HOLDINGS_PATH.exists():
-        try:
-            with open(HOLDINGS_PATH, "r", encoding="utf-8") as hf:
-                h_data = json.load(hf)
-                current_pos = {k: int(v) for k, v in h_data.get("positions", {}).items()}
-                last_sync_date = str(h_data.get("last_sync_date", ""))
-                if "total_budget" in h_data and float(h_data["total_budget"]) >= 10000.0:
-                    total_capital = float(h_data["total_budget"])
-        except Exception:
-            current_pos = {}
-
+def generate_live_signals(default_capital: float = 60000.0) -> dict:
     data = load_aligned_data(start_date="2020-09-01")
     close_df = data["close"]
     raw_close_df = data["raw_close"]
@@ -87,6 +83,105 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
     idx_last = len(close_df) - 1
     latest_dt = close_df.index[idx_last]
     latest_raw_px = raw_close_df.iloc[idx_last]
+
+    # 1. 读取用户实盘账本 (my_holdings.json) 并实时核算实盘收益与折合年化
+    current_pos: dict[str, int] = {}
+    last_sync_date = ""
+    invest_start_date = latest_dt.strftime("%Y-%m-%d")
+    initial_principal = default_capital
+    cash_balance: float | None = None
+    nav_history: list[dict] = []
+
+    if HOLDINGS_PATH.exists():
+        try:
+            with open(HOLDINGS_PATH, "r", encoding="utf-8") as hf:
+                h_data = json.load(hf)
+                current_pos = {k: int(v) for k, v in h_data.get("positions", {}).items()}
+                last_sync_date = str(h_data.get("last_sync_date", ""))
+                invest_start_date = str(h_data.get("invest_start_date") or last_sync_date or invest_start_date)
+                initial_principal = float(h_data.get("initial_principal", h_data.get("total_budget", default_capital)))
+                if "cash_balance" in h_data and h_data["cash_balance"] is not None:
+                    cash_balance = float(h_data["cash_balance"])
+                nav_history = list(h_data.get("nav_history", []))
+        except Exception:
+            current_pos = {}
+
+    has_live_positions = sum(current_pos.values()) > 0
+    live_mkt_value = round(
+        sum(sh * float(latest_raw_px[c]) for c, sh in current_pos.items() if sh > 0 and c in latest_raw_px.index),
+        2,
+    )
+    if cash_balance is None:
+        cash_balance = round(max(0.0, initial_principal - live_mkt_value), 2) if has_live_positions else initial_principal
+
+    live_total_equity = round(live_mkt_value + cash_balance, 2) if has_live_positions else round(initial_principal, 2)
+    cum_profit_rmb = round(live_total_equity - initial_principal, 2)
+    cum_return_pct = round((live_total_equity / initial_principal - 1.0) * 100.0, 2) if initial_principal > 0 else 0.0
+
+    start_dt = pd.to_datetime(invest_start_date)
+    cal_days = max(1, int((latest_dt - start_dt).days))
+    idx_start_bench = min(idx_last, int(close_df.index.searchsorted(start_dt)))
+    trading_days_held = max(1, idx_last - idx_start_bench)
+
+    # 复利折合年化收益率 (与回测引擎口径严格一致；防首几日极端对数溢出)
+    ratio_eq = max(0.01, live_total_equity / initial_principal) if initial_principal > 0 else 1.0
+    exponent = 365.25 / cal_days
+    annualized_return_pct = round(float((math.exp(max(-4.5, min(4.5, math.log(ratio_eq) * exponent))) - 1.0) * 100.0), 2)
+    simple_annualized_pct = round(float(cum_return_pct * (365.25 / cal_days)), 2)
+
+    base_hs300 = float(close_df["510300"].iloc[idx_start_bench])
+    cur_hs300 = float(close_df["510300"].iloc[idx_last])
+    hs300_same_period_pct = round((cur_hs300 / base_hs300 - 1.0) * 100.0, 2) if base_hs300 > 0 else 0.0
+    excess_alpha_pct = round(cum_return_pct - hs300_same_period_pct, 2)
+
+    if not has_live_positions:
+        ann_note = "当前尚未记录实盘持仓，完成首次建仓并同步后将自动追踪实盘累计收益与年化。"
+    elif cal_days < 30:
+        ann_note = (
+            f"实盘已运行 {cal_days} 个自然日（{trading_days_held} 个交易日）；"
+            f"建仓初期天数较短，单周微小涨跌在折算年化时会被显著放大（线性折算约 {simple_annualized_pct:+.2f}%），运行满 1~3 个月后年化指标将趋于稳健。"
+        )
+    else:
+        ann_note = f"实盘已稳健运行 {cal_days} 个自然日（{trading_days_held} 个交易日），按复利公式精确折算年化。"
+
+    # 持仓明细拆解
+    holding_breakdown = []
+    for c, sh in current_pos.items():
+        if sh > 0 and c in latest_raw_px.index:
+            px = float(latest_raw_px[c])
+            mv = round(sh * px, 2)
+            holding_breakdown.append({
+                "code": c,
+                "name": ETF_UNIVERSE.get(c, {}).get("name", c),
+                "shares": sh,
+                "latest_price": round(px, 3),
+                "market_value": mv,
+                "weight_pct": round(mv / live_total_equity * 100.0, 1) if live_total_equity > 0 else 0.0,
+            })
+    holding_breakdown.sort(key=lambda x: x["market_value"], reverse=True)
+
+    live_performance = {
+        "has_live_positions": has_live_positions,
+        "invest_start_date": invest_start_date,
+        "as_of_date": latest_dt.strftime("%Y-%m-%d"),
+        "calendar_days": cal_days,
+        "trading_days": trading_days_held,
+        "initial_principal": round(initial_principal, 2),
+        "market_value": live_mkt_value,
+        "cash_balance": round(cash_balance, 2),
+        "total_equity": live_total_equity,
+        "cum_profit_rmb": cum_profit_rmb,
+        "cum_return_pct": cum_return_pct,
+        "annualized_return_pct": annualized_return_pct,
+        "simple_annualized_pct": simple_annualized_pct,
+        "hs300_same_period_pct": hs300_same_period_pct,
+        "excess_alpha_pct": excess_alpha_pct,
+        "ann_note": ann_note,
+        "holding_breakdown": holding_breakdown,
+    }
+
+    # 用当前账户真实总净值作为本周五复利调仓总资金盘子（实现盈利自动复利滚动，且买单严格匹配可用现金）
+    total_capital = live_total_equity
 
     ret_df = close_df.pct_change().fillna(0.0)
     log_close = np.log(close_df)
@@ -100,13 +195,13 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
     # 3. 计算【策略一：全天候“超级固收+”低波底座】最新目标权重
     weights_s1 = compute_s1_weights(close_df, vol20_df, ma20_df, ma60_df, idx_last, safe_bond)
 
-    # 4. 识别用户实盘当前持有的动量主力仓位（市值 >= 总资金14% 视为已持有主力腿，启用 Top-3 排名缓冲防换手）
+    # 4. 识别用户实盘当前持有的动量主力仓位（市值 >= 总资产12% 视为已持有主力腿，即使网格卖出一笔后仍稳健识别）
     live_prev_top = []
-    if sum(current_pos.values()) > 0:
+    if has_live_positions:
         heavy_candidates = []
         for c in RISK_UNIVERSE:
             mkt_v = current_pos.get(c, 0) * float(latest_raw_px[c])
-            if mkt_v >= total_capital * 0.14:
+            if mkt_v >= total_capital * 0.12:
                 heavy_candidates.append((c, mkt_v))
         heavy_candidates.sort(key=lambda x: x[1], reverse=True)
         live_prev_top = [c for c, _ in heavy_candidates[:2]]
@@ -165,8 +260,8 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
 
     all_check_codes = list(dict.fromkeys(ALL_TRADABLE_CODES + list(current_pos.keys())))
     target_map = {item["code"]: item["suggest_shares"] for item in combo_orders}
-    is_initial_build = sum(current_pos.values()) == 0
-    MIN_REBALANCE_AMT = round(total_capital * MIN_REBALANCE_RATIO, 0)  # 6万元对应 2,400 元防磨损锁
+    is_initial_build = not has_live_positions
+    MIN_REBALANCE_AMT = round(total_capital * MIN_REBALANCE_RATIO, 0)
 
     action_steps = []
     post_rebalance_positions = {}
@@ -210,7 +305,7 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
                 "est_cash_flow": diff_amt,
             })
 
-    # 防超支校验：若因微调免卖出而另一只品种买入加仓导致总持仓市值超过 99% 总预算，自动恢复卖出项以保证现金充足
+    # 防超支校验：确保【调仓后证券市值 + 预估东财5元佣金】绝不超出当前真实总资产 99%，保证买单100%够钱成交
     max_post_spend = total_capital * 0.99
     post_used_cash = round(
         sum(post_rebalance_positions[c] * float(latest_raw_px[c]) for c in post_rebalance_positions), 1
@@ -233,6 +328,11 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
                 if post_used_cash <= max_post_spend:
                     break
 
+    est_trade_commissions = round(
+        sum(calc_single_order_comm(s["est_cash_flow"]) for s in action_steps if s["trade_shares"] > 0), 2
+    )
+    est_post_trade_cash = round(total_capital - post_used_cash - est_trade_commissions, 2)
+
     order_priority = {
         "🔴 第一步：卖出减仓": 0,
         "🟢 第二步：买入加仓": 1,
@@ -242,7 +342,7 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
     action_steps.sort(key=lambda x: (order_priority.get(x["action"], 9), -x["est_cash_flow"]))
 
     used_combo_cash = post_used_cash
-    reserve_cash = round(total_capital - used_combo_cash, 1)
+    reserve_cash = est_post_trade_cash
 
     # 8. 调仓窗口识别与防误操作提示（周五 vs 周中预览）
     weekday_names = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
@@ -251,7 +351,7 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
     if is_friday_window:
         timing_banner = (
             f"🟢 当前行情基准日 {latest_dt.strftime('%Y-%m-%d')} 为【周五调仓窗口】！"
-            f"建议在周五 14:45~14:55 按下方【先卖后买】顺序执行买卖，成交后双击《确认已完成今日调仓_同步持仓.bat》。"
+            f"建议在周五 14:45~14:55 按下方【先卖后买】顺序执行买卖，成交后双击《确认已完成今日调仓_同步持仓.bat》记录最新持仓与可用现金。"
         )
     else:
         timing_banner = (
@@ -259,20 +359,20 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
             f"请严格等到【本周五 14:45】重新运行脚本后再执行实盘买卖，周中切勿提前调仓（防假突破打脸与5元最低佣金磨损）。"
         )
 
-    # 9. 四大实盘风控与防磨损保护状态说明（替代原负收益盘中网格表）
+    # 9. 四大实盘风控与防磨损保护状态说明
     protection_status = [
         {
             "module": "① 盘中网格条件单管控",
             "state": "🚫 已全面停用（实测提效 +1.36%/年）",
             "detail": (
-                "严格路径回测证实：在动量趋势组合上叠加盘中网格会过早卖飞主升浪牛股、下跌破位前逆势接刀，且占用 5.5% 闲置现金。"
-                "请在东财APP【条件单 -> 我的条件单】中暂停/删除此前设置的网格单，释放资金吃满趋势复利！"
+                "严格状态机回测证实：在动量趋势组合上叠加盘中网格会过早卖飞主升浪牛股（正如本周二德国ETF被网格过早卖出一笔，错失周四涨至1.876的后半段涨幅）。"
+                "请确保东财APP【条件单 -> 我的条件单】中的网格单已暂停/删除！"
             ),
         },
         {
             "module": "② 双债利率风险保护伞",
             "state": (
-                f"🛡️ 已切入 511360 短融避险"
+                "🛡️ 已切入 511360 短融避险"
                 if bond_guard_info["switched_to_short_bond"]
                 else f"✅ 511260 十年国债稳健持有 (20日 {bond_guard_info['bond_511260_ret20_pct']:+.2f}%)"
             ),
@@ -289,10 +389,10 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
         },
         {
             "module": "④ 不免5防微调锁 & 零钱增值",
-            "state": f"💰 免操作阈值 ¥{MIN_REBALANCE_AMT:,.0f} ｜ 预留零钱 ¥{reserve_cash:,.0f}",
+            "state": f"💰 免操作阈值 ¥{MIN_REBALANCE_AMT:,.0f} ｜ 调仓后预留现金 ¥{reserve_cash:,.0f}",
             "detail": (
-                f"单品种调仓差额低于总本金 {MIN_REBALANCE_RATIO*100:.1f}% (¥{MIN_REBALANCE_AMT:,.0f}) 自动跳过免交 5 元最低佣金；"
-                f"账面剩余约 ¥{reserve_cash:,.0f} 零钱可在东财收盘前顺手参与 1 天期国债逆回购 (GC001/R-001)。"
+                f"单品种调仓差额低于总资产 {MIN_REBALANCE_RATIO*100:.1f}% (¥{MIN_REBALANCE_AMT:,.0f}) 自动跳过免交 5 元最低佣金；"
+                f"预计本次调仓券商佣金合计约 ¥{est_trade_commissions:.1f} 元。"
             ),
         },
     ]
@@ -307,9 +407,14 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
         "timing_banner": timing_banner,
         "last_sync_date": last_sync_date,
         "generated_at": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "initial_principal": round(initial_principal, 2),
         "total_capital": total_capital,
+        "live_performance": live_performance,
+        "nav_history": nav_history,
         "combo_ratio_label": f"{s1_pct}%全天候固收底座 + {s2_pct}%跨资产动量轮动",
         "used_combo_cash": used_combo_cash,
+        "est_trade_commissions": est_trade_commissions,
+        "est_post_trade_cash": est_post_trade_cash,
         "reserve_cash": reserve_cash,
         "min_rebalance_amt": MIN_REBALANCE_AMT,
         "bond_guard_info": bond_guard_info,
@@ -331,14 +436,31 @@ def generate_live_signals(total_capital: float = 60000.0) -> dict:
 
     util_pct = used_combo_cash / total_capital * 100.0 if total_capital > 0 else 0.0
     print("=========================================================================================")
-    print(f"📌 东方财富 {total_capital:,.0f} 元实盘调仓信号单 (基准行情日: {result['as_of_date']} {wk_cn})")
+    print(f"💼 【我的东财实盘账户实时成绩单】（建仓起始日: {invest_start_date} | 已运行 {cal_days} 天 / {trading_days_held} 个交易日）")
     print("=========================================================================================")
+    print(
+        f"   投入总本金: ¥{initial_principal:,.2f}  |  当前账户总资产: ¥{live_total_equity:,.2f} "
+        f"(证券市值 ¥{live_mkt_value:,.2f} + 可用现金 ¥{cash_balance:,.2f})"
+    )
+    print(
+        f"   📈 当前累计净收益: {cum_profit_rmb:+,.2f} 元 ({cum_return_pct:+.2f}%)  |  "
+        f"🔥 折合年化收益率: {annualized_return_pct:+.2f}%"
+    )
+    print(
+        f"   📊 同期沪深300涨跌: {hs300_same_period_pct:+.2f}%  |  "
+        f"🏆 实盘跑赢大盘超额 (Alpha): {excess_alpha_pct:+.2f}%"
+    )
+    print(f"   ℹ️  {ann_note}")
+    print("-----------------------------------------------------------------------------------------")
     print(f"⚠️  {timing_banner}")
-    print(f"\n【推荐二合一：{result['combo_ratio_label']} | 先卖后买差额执行表】")
+    print(f"\n【推荐二合一：{result['combo_ratio_label']} | 先卖后买差额执行表（按当前实盘总资产 ¥{total_capital:,.1f} 复利配仓）】")
     if action_steps:
         cols = ["action", "code", "name", "latest_price", "current_shares", "target_shares", "trade_shares", "est_cash_flow"]
         print(pd.DataFrame(action_steps)[cols].to_string(index=False))
-    print(f"   -> 调仓后证券市值: ¥{used_combo_cash:,.1f} 元 (真实资金利用率 {util_pct:.1f}%) | 账户预留零钱: ¥{reserve_cash:,.1f} 元")
+    print(
+        f"   -> 调仓后证券市值: ¥{used_combo_cash:,.1f} 元 (利用率 {util_pct:.1f}%) | "
+        f"预估佣金: ¥{est_trade_commissions:.1f} 元 | 预计剩余可用现金: ¥{est_post_trade_cash:,.1f} 元"
+    )
 
     print("\n【6大跨资产零溢价池 实时多周期动量 (10/20/30日 OLS×R²) 打分榜】")
     print(pd.DataFrame(momentum_board).to_string(index=False))

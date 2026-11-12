@@ -1,6 +1,9 @@
 {
-  "note": "已于 2026-11-09 同步最新二合一策略持仓。如有微调也可直接用记事本修改股数。",
+  "note": "实盘账本：positions 填东财APP当前实际持股数，cash_balance 填东财APP当前【可用资金】(若有周中手动/网格成交可随时修改这两项校准)。",
+  "invest_start_date": "2026-11-09",
   "last_sync_date": "2026-11-09",
+  "initial_principal": 60000.0,
+  "cash_balance": 3049.8,
   "total_budget": 60000.0,
   "positions": {
     "511260": 200,
@@ -12,5 +15,15 @@
     "159915": 0,
     "159980": 0,
     "510500": 0
-  }
+  },
+  "nav_history": [
+    {
+      "date": "2026-11-09",
+      "market_value": 56925.2,
+      "cash_balance": 3049.8,
+      "total_equity": 59975.0,
+      "cum_profit_rmb": -25.0,
+      "cum_return_pct": -0.04
+    }
+  ]
 }

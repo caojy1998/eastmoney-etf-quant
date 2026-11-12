@@ -32,7 +32,8 @@ def get_default_capital() -> float:
     if HOLDINGS_PATH.exists():
         try:
             with open(HOLDINGS_PATH, "r", encoding="utf-8") as f:
-                val = float(json.load(f).get("total_budget", 60000.0))
+                d = json.load(f)
+                val = float(d.get("initial_principal", d.get("total_budget", 60000.0)))
                 if val >= 10000.0:
                     return val
         except Exception:
