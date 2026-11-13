@@ -1,17 +1,17 @@
 {
   "note": "实盘账本：positions 填东财APP当前实际持股数，cash_balance 填东财APP当前【可用资金】(若有周中手动/网格成交可随时修改这两项校准)。",
   "invest_start_date": "2026-11-09",
-  "last_sync_date": "2026-11-09",
+  "last_sync_date": "2026-11-13",
   "initial_principal": 60000.0,
-  "cash_balance": 3049.8,
-  "total_budget": 60000.0,
+  "cash_balance": 594.5,
+  "total_budget": 60277.5,
   "positions": {
-    "511260": 200,
+    "511260": 100,
     "511360": 0,
-    "513030": 7100,
-    "512890": 11300,
+    "513030": 11400,
+    "512890": 18400,
     "511380": 100,
-    "518880": 200,
+    "518880": 100,
     "159915": 0,
     "159980": 0,
     "510500": 0
@@ -24,6 +24,14 @@
       "total_equity": 59975.0,
       "cum_profit_rmb": -25.0,
       "cum_return_pct": -0.04
+    },
+    {
+      "date": "2026-11-13",
+      "market_value": 59683.0,
+      "cash_balance": 594.5,
+      "total_equity": 60277.5,
+      "cum_profit_rmb": 277.5,
+      "cum_return_pct": 0.46
     }
   ]
 }

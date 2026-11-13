@@ -305,33 +305,67 @@ def generate_live_signals(default_capital: float = 60000.0) -> dict:
                 "est_cash_flow": diff_amt,
             })
 
-    # 防超支校验：确保【调仓后证券市值 + 预估东财5元佣金】绝不超出当前真实总资产 99%，保证买单100%够钱成交
-    max_post_spend = total_capital * 0.99
-    post_used_cash = round(
-        sum(post_rebalance_positions[c] * float(latest_raw_px[c]) for c in post_rebalance_positions), 1
-    )
-    if post_used_cash > max_post_spend:
-        for step in action_steps:
-            c = step["code"]
-            if step["action"] == "⚪ 微调免操作(防手续费磨损)" and step["theoretical_target_shares"] < step["current_shares"]:
-                diff_sh_restore = step["theoretical_target_shares"] - step["current_shares"]
-                raw_px = float(latest_raw_px[c])
-                step["action"] = "🔴 第一步：卖出减仓"
-                step["target_shares"] = step["theoretical_target_shares"]
-                step["trade_shares"] = abs(diff_sh_restore)
-                step["trade_lots"] = abs(diff_sh_restore) // 100
-                step["est_cash_flow"] = round(abs(diff_sh_restore) * raw_px, 1)
-                post_rebalance_positions[c] = int(step["theoretical_target_shares"])
-                post_used_cash = round(
-                    sum(post_rebalance_positions[k] * float(latest_raw_px[k]) for k in post_rebalance_positions), 1
-                )
-                if post_used_cash <= max_post_spend:
-                    break
+    # 防超支校验：仅当确实存在【买入加仓】且【现有可用现金 + 卖出净回笼 < 买入总额 + 预估佣金 + 100元滑点缓冲】时，
+    # 才按金额从大到小解锁 >= 600元 的微调卖出项（无买单时绝不解锁，百元级碎单绝不解锁白交5元佣金！）
+    def calc_post_metrics() -> tuple[float, float, float]:
+        used_mv = round(
+            sum(post_rebalance_positions[k] * float(latest_raw_px[k]) for k in post_rebalance_positions), 1
+        )
+        comm_sum = round(
+            sum(calc_single_order_comm(s["est_cash_flow"]) for s in action_steps if s["trade_shares"] > 0), 2
+        )
+        rem_c = round(total_capital - used_mv - comm_sum, 2)
+        return used_mv, comm_sum, rem_c
 
-    est_trade_commissions = round(
-        sum(calc_single_order_comm(s["est_cash_flow"]) for s in action_steps if s["trade_shares"] > 0), 2
-    )
-    est_post_trade_cash = round(total_capital - post_used_cash - est_trade_commissions, 2)
+    post_used_cash, est_trade_commissions, est_post_trade_cash = calc_post_metrics()
+    has_buy_orders = any(s["action"] == "🟢 第二步：买入加仓" and s["trade_shares"] > 0 for s in action_steps)
+
+    if has_buy_orders and est_post_trade_cash < 100.0:
+        locked_sell_steps = [
+            s for s in action_steps
+            if s["action"] == "⚪ 微调免操作(防手续费磨损)" and s["theoretical_target_shares"] < s["current_shares"]
+        ]
+        locked_sell_steps.sort(
+            key=lambda s: (s["current_shares"] - s["theoretical_target_shares"]) * float(latest_raw_px[s["code"]]),
+            reverse=True,
+        )
+        for step in locked_sell_steps:
+            c = step["code"]
+            raw_px = float(latest_raw_px[c])
+            unlock_amt = (step["current_shares"] - step["theoretical_target_shares"]) * raw_px
+            if unlock_amt < 600.0:
+                continue
+            diff_sh_restore = step["theoretical_target_shares"] - step["current_shares"]
+            step["action"] = "🔴 第一步：卖出减仓"
+            step["target_shares"] = step["theoretical_target_shares"]
+            step["trade_shares"] = abs(diff_sh_restore)
+            step["trade_lots"] = abs(diff_sh_restore) // 100
+            step["est_cash_flow"] = round(abs(diff_sh_restore) * raw_px, 1)
+            post_rebalance_positions[c] = int(step["theoretical_target_shares"])
+            post_used_cash, est_trade_commissions, est_post_trade_cash = calc_post_metrics()
+            if est_post_trade_cash >= 100.0:
+                break
+
+        # 若仍差百元以内现金，直接从最大买单少买 1 手 (100股)，绝不为凑百元零钱额外多交一笔 5 元卖出佣金
+        while has_buy_orders and est_post_trade_cash < 60.0:
+            buy_cands = [
+                s for s in action_steps
+                if s["action"] == "🟢 第二步：买入加仓" and s["trade_shares"] >= 100
+            ]
+            if not buy_cands:
+                break
+            top_buy = max(buy_cands, key=lambda s: s["est_cash_flow"])
+            c = top_buy["code"]
+            raw_px = float(latest_raw_px[c])
+            top_buy["target_shares"] -= 100
+            top_buy["trade_shares"] -= 100
+            top_buy["trade_lots"] = top_buy["trade_shares"] // 100
+            top_buy["est_cash_flow"] = round(top_buy["trade_shares"] * raw_px, 1)
+            if top_buy["trade_shares"] == 0:
+                top_buy["action"] = "⚪ 保持不动"
+            post_rebalance_positions[c] = int(top_buy["target_shares"])
+            post_used_cash, est_trade_commissions, est_post_trade_cash = calc_post_metrics()
+            has_buy_orders = any(s["action"] == "🟢 第二步：买入加仓" and s["trade_shares"] > 0 for s in action_steps)
 
     order_priority = {
         "🔴 第一步：卖出减仓": 0,
@@ -391,7 +425,8 @@ def generate_live_signals(default_capital: float = 60000.0) -> dict:
             "module": "④ 不免5防微调锁 & 零钱增值",
             "state": f"💰 免操作阈值 ¥{MIN_REBALANCE_AMT:,.0f} ｜ 调仓后预留现金 ¥{reserve_cash:,.0f}",
             "detail": (
-                f"单品种调仓差额低于总资产 {MIN_REBALANCE_RATIO*100:.1f}% (¥{MIN_REBALANCE_AMT:,.0f}) 自动跳过免交 5 元最低佣金；"
+                f"单品种调仓差额低于总资产 {MIN_REBALANCE_RATIO*100:.1f}% (¥{MIN_REBALANCE_AMT:,.0f}) 自动锁定免操作"
+                f"（仅当存在实际买单且可用现金不足时才解锁 ≥¥600 的减仓项，绝不空卖碎单）；"
                 f"预计本次调仓券商佣金合计约 ¥{est_trade_commissions:.1f} 元。"
             ),
         },

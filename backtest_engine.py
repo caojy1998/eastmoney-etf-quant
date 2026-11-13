@@ -489,10 +489,31 @@ def run_strict_account_backtest(
                 else:
                     exec_shares[c] = t_sh
 
-            # 防超支解锁：若因微调免卖出导致总持仓超 99% 资产，自动释放微调卖出以腾出买单现金
-            for c in locked_sells:
-                if sum(exec_shares[k] * float(raw_px_row[k]) for k in all_codes) > nav_before * 0.99:
-                    exec_shares[c] = tgt_shares[c]
+            # 防超支解锁：仅当确实存在【买入加仓】且【现有现金 + 已确定卖出净回笼 < 计划买入总额 + 费用】时，
+            # 才按金额从大到小释放 >= 600元 的微调卖出项腾出现金（绝不在无买单时解锁，也绝不解锁百元级碎单白交5元佣金）
+            has_buys = any(exec_shares[k] > shares[k] for k in all_codes)
+            if has_buys and locked_sells:
+                def calc_proj_cash_shortfall() -> float:
+                    proj_cash = cash
+                    for k in all_codes:
+                        d_sh = exec_shares[k] - shares[k]
+                        if d_sh < 0:
+                            s_amt = (-d_sh) * float(raw_px_row[k])
+                            _, s_cost = calc_order_cost(s_amt, min_fee=min_fee, comm_rate=comm_rate, slip_rate=slip_rate)
+                            proj_cash += s_amt - s_cost
+                        elif d_sh > 0:
+                            b_amt = d_sh * float(raw_px_row[k])
+                            _, b_cost = calc_order_cost(b_amt, min_fee=min_fee, comm_rate=comm_rate, slip_rate=slip_rate)
+                            proj_cash -= b_amt + b_cost
+                    return -proj_cash
+
+                locked_sells.sort(key=lambda k: (shares[k] - tgt_shares[k]) * float(raw_px_row[k]), reverse=True)
+                for c in locked_sells:
+                    if calc_proj_cash_shortfall() <= 0.0:
+                        break
+                    unlock_amt = (shares[c] - tgt_shares[c]) * float(raw_px_row[c])
+                    if unlock_amt >= 600.0:
+                        exec_shares[c] = tgt_shares[c]
 
             wk_orders = 0
             wk_fee = 0.0
