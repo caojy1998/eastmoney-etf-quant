@@ -4,7 +4,7 @@
   "is_friday_rebalance_window": true,
   "timing_banner": "🟢 当前行情基准日 2026-11-13 为【周五调仓窗口】！建议在周五 14:45~14:55 按下方【先卖后买】顺序执行买卖，成交后双击《确认已完成今日调仓_同步持仓.bat》记录最新持仓与可用现金。",
   "last_sync_date": "2026-11-13",
-  "generated_at": "2026-11-13 15:19:48",
+  "generated_at": "2026-11-15 22:21:12",
   "initial_principal": 60000.0,
   "total_capital": 60391.5,
   "live_performance": {
@@ -485,8 +485,8 @@
         "code": "513630",
         "name": "港股红利低波ETF(备用观察)",
         "price": 1.597,
-        "iopv": 1.5925,
-        "premium_pct": 0.28,
+        "iopv": 1.5919,
+        "premium_pct": 0.32,
         "source": "实时行情官方IOPV"
       },
       {
