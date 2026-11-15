@@ -4,21 +4,34 @@ cd /d "%~dp0"
 
 set "PYTHON_EXE=%~dp0.venv\Scripts\python.exe"
 set "UV_EXE=%USERPROFILE%\.local\bin\uv.exe"
+if not exist "%UV_EXE%" (
+    for /f "delims=" %%u in ('where uv 2^>nul') do (
+        set "UV_EXE=%%u"
+        goto :check_venv
+    )
+)
 
-if exist "%PYTHON_EXE%" goto :run_steps
+:check_venv
+if exist "%PYTHON_EXE%" (
+    "%PYTHON_EXE%" -c "import numpy, pandas, PIL" >nul 2>nul
+    if not errorlevel 1 goto :run_steps
+)
 
-echo [提示] 未检测到本地独立 Python 环境 (.venv)，正在尝试用 uv 自动初始化...
+echo [提示] 正在自动初始化或修复本地独立 Python 环境 (.venv)...
 if exist "%UV_EXE%" (
-    "%UV_EXE%" venv "%~dp0.venv" --python 3.12
+    "%UV_EXE%" venv --clear "%~dp0.venv" --python ">=3.11"
     "%UV_EXE%" pip install --python "%PYTHON_EXE%" -r "%~dp0requirements.txt"
 )
-if exist "%PYTHON_EXE%" goto :run_steps
+if exist "%PYTHON_EXE%" (
+    "%PYTHON_EXE%" -c "import numpy, pandas, PIL" >nul 2>nul
+    if not errorlevel 1 goto :run_steps
+)
 
-where python >nul 2>nul
-if not errorlevel 1 (
-    for /f "delims=" %%i in ('where python') do (
-        echo %%i | findstr /i "WindowsApps" >nul
-        if errorlevel 1 (
+for /f "delims=" %%i in ('where python 2^>nul') do (
+    echo %%i | findstr /i "WindowsApps" >nul
+    if errorlevel 1 (
+        "%%i" -c "import numpy, pandas, PIL" >nul 2>nul
+        if not errorlevel 1 (
             set "PYTHON_EXE=%%i"
             goto :run_steps
         )
@@ -26,7 +39,9 @@ if not errorlevel 1 (
 )
 
 echo ==========================================================================
-echo [错误] 未找到可用的 Python 解释器！已中止打开网页，防止误看旧缓存数据。
+echo [错误] 未找到可用的 Python 环境（且无法自动初始化），已中止打开旧网页！
+echo        若您更换了新电脑，请先安装 Python (勾选 Add to PATH) 并执行:
+echo        pip install -r requirements.txt
 echo ==========================================================================
 pause
 exit /b 1
