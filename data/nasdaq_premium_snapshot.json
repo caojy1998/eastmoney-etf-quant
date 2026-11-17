@@ -2,49 +2,49 @@
   {
     "code": "159980",
     "name": "大成有色ETF(商品主力)",
-    "price": 2.029,
-    "iopv": 2.0355,
-    "premium_pct": -0.32,
+    "price": 1.999,
+    "iopv": 2.0034,
+    "premium_pct": -0.22,
     "source": "实时行情官方IOPV"
   },
   {
     "code": "159915",
     "name": "易方达创业板ETF(成长主力)",
-    "price": 2.442,
-    "iopv": 2.4417,
-    "premium_pct": 0.01,
+    "price": 2.31,
+    "iopv": 2.3061,
+    "premium_pct": 0.17,
     "source": "实时行情官方IOPV"
   },
   {
     "code": "513630",
     "name": "港股红利低波ETF(备用观察)",
-    "price": 1.597,
-    "iopv": 1.5919,
-    "premium_pct": 0.32,
-    "source": "实时行情官方IOPV"
-  },
-  {
-    "code": "513030",
-    "name": "华安德国ETF(海外主力)",
-    "price": 1.865,
-    "iopv": 1.8125,
-    "premium_pct": 2.9,
+    "price": 1.617,
+    "iopv": 1.6067,
+    "premium_pct": 0.64,
     "source": "实时行情官方IOPV"
   },
   {
     "code": "513400",
     "name": "鹏华道琼斯ETF(美股对照)",
-    "price": 1.319,
-    "iopv": 1.2783,
-    "premium_pct": 3.18,
+    "price": 1.288,
+    "iopv": 1.2608,
+    "premium_pct": 2.16,
+    "source": "实时行情官方IOPV"
+  },
+  {
+    "code": "513030",
+    "name": "华安德国ETF(海外主力)",
+    "price": 1.833,
+    "iopv": 1.7888,
+    "premium_pct": 2.47,
     "source": "实时行情官方IOPV"
   },
   {
     "code": "513100",
     "name": "国泰纳指ETF(高溢价防雷对照)",
-    "price": 2.23,
-    "iopv": 1.8923,
-    "premium_pct": 17.85,
+    "price": 2.166,
+    "iopv": 1.818,
+    "premium_pct": 19.14,
     "source": "实时行情官方IOPV"
   }
 ]

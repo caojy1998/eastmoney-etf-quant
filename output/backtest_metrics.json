@@ -19,14 +19,14 @@
     {
       "name": "策略一：全天候“超级固收+”底座 (实盘整手·不免5)",
       "initial_capital": 60000.0,
-      "final_capital": 78328.36,
-      "net_profit": 18328.36,
-      "total_return_pct": 30.55,
-      "cagr_pct": 4.66,
+      "final_capital": 78230.25,
+      "net_profit": 18230.25,
+      "total_return_pct": 30.38,
+      "cagr_pct": 4.63,
       "max_drawdown_pct": -2.63,
       "ann_vol_pct": 2.67,
-      "sharpe_ratio": 1.0,
-      "calmar_ratio": 1.77,
+      "sharpe_ratio": 0.98,
+      "calmar_ratio": 1.76,
       "monthly_win_rate_pct": 74.3,
       "yearly_returns_pct": {
         "2021": 5.11,
@@ -34,7 +34,7 @@
         "2023": 4.78,
         "2024": 9.47,
         "2025": 6.11,
-        "2026": 1.78
+        "2026": 1.65
       },
       "order_count": 279,
       "total_commission_rmb": 1533.54,
@@ -43,14 +43,14 @@
     {
       "name": "策略二：跨资产多维动量轮动 (实盘整手·不免5)",
       "initial_capital": 60000.0,
-      "final_capital": 144040.66,
-      "net_profit": 84040.66,
-      "total_return_pct": 140.07,
-      "cagr_pct": 16.13,
+      "final_capital": 143845.52,
+      "net_profit": 83845.52,
+      "total_return_pct": 139.74,
+      "cagr_pct": 16.07,
       "max_drawdown_pct": -11.15,
-      "ann_vol_pct": 13.87,
+      "ann_vol_pct": 13.86,
       "sharpe_ratio": 1.02,
-      "calmar_ratio": 1.45,
+      "calmar_ratio": 1.44,
       "monthly_win_rate_pct": 65.7,
       "yearly_returns_pct": {
         "2021": 13.94,
@@ -58,7 +58,7 @@
         "2023": 0.99,
         "2024": 8.95,
         "2025": 48.7,
-        "2026": 9.11
+        "2026": 8.97
       },
       "order_count": 434,
       "total_commission_rmb": 2952.32,
@@ -67,10 +67,10 @@
     {
       "name": "推荐组合：40%全天候底座 + 60%跨资产动量 (实盘整手·不免5)",
       "initial_capital": 60000.0,
-      "final_capital": 115087.27,
-      "net_profit": 55087.27,
-      "total_return_pct": 91.81,
-      "cagr_pct": 11.76,
+      "final_capital": 114930.23,
+      "net_profit": 54930.23,
+      "total_return_pct": 91.55,
+      "cagr_pct": 11.72,
       "max_drawdown_pct": -7.93,
       "ann_vol_pct": 8.79,
       "sharpe_ratio": 1.11,
@@ -82,7 +82,7 @@
         "2023": 2.29,
         "2024": 10.04,
         "2025": 29.55,
-        "2026": 6.47
+        "2026": 6.33
       },
       "order_count": 601,
       "total_commission_rmb": 3097.68,
@@ -91,14 +91,14 @@
     {
       "name": "基准A：纯十年国债ETF (511260) 持有",
       "initial_capital": 60000.0,
-      "final_capital": 77922.99,
-      "net_profit": 17922.99,
-      "total_return_pct": 29.87,
-      "cagr_pct": 4.56,
+      "final_capital": 77855.89,
+      "net_profit": 17855.89,
+      "total_return_pct": 29.76,
+      "cagr_pct": 4.54,
       "max_drawdown_pct": -2.27,
       "ann_vol_pct": 2.19,
-      "sharpe_ratio": 1.17,
-      "calmar_ratio": 2.01,
+      "sharpe_ratio": 1.16,
+      "calmar_ratio": 2.0,
       "monthly_win_rate_pct": 77.1,
       "yearly_returns_pct": {
         "2021": 5.88,
@@ -106,15 +106,15 @@
         "2023": 4.54,
         "2024": 9.28,
         "2025": 0.36,
-        "2026": 4.04
+        "2026": 3.95
       }
     },
     {
       "name": "基准B：传统银行固收理财 (2.8%年化)",
       "initial_capital": 60000.0,
-      "final_capital": 70531.98,
-      "net_profit": 10531.98,
-      "total_return_pct": 17.55,
+      "final_capital": 70553.31,
+      "net_profit": 10553.31,
+      "total_return_pct": 17.59,
       "cagr_pct": 2.8,
       "max_drawdown_pct": 0.0,
       "ann_vol_pct": 0.14,
@@ -127,28 +127,28 @@
         "2023": 2.79,
         "2024": 2.82,
         "2025": 2.8,
-        "2026": 2.43
+        "2026": 2.46
       }
     },
     {
       "name": "基准C：沪深300ETF (510300) 买入死拿",
       "initial_capital": 60000.0,
-      "final_capital": 50584.35,
-      "net_profit": -9415.65,
-      "total_return_pct": -15.69,
-      "cagr_pct": -2.87,
+      "final_capital": 50076.4,
+      "net_profit": -9923.6,
+      "total_return_pct": -16.54,
+      "cagr_pct": -3.03,
       "max_drawdown_pct": -44.75,
-      "ann_vol_pct": 19.24,
-      "sharpe_ratio": -0.25,
-      "calmar_ratio": -0.06,
-      "monthly_win_rate_pct": 51.4,
+      "ann_vol_pct": 19.23,
+      "sharpe_ratio": -0.26,
+      "calmar_ratio": -0.07,
+      "monthly_win_rate_pct": 50.0,
       "yearly_returns_pct": {
         "2021": -5.24,
         "2022": -21.68,
         "2023": -10.43,
         "2024": 18.39,
         "2025": 21.49,
-        "2026": -11.81
+        "2026": -12.7
       }
     }
   ],
